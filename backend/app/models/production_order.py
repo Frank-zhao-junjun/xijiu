@@ -3,17 +3,17 @@ Production Order models
 """
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, Text, DateTime, Date, Numeric, Index
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, String, Text, DateTime, Date, Numeric, Integer, Index
+from sqlalchemy.orm import relationship
 from app.database import Base
 
 
 class ProductionOrder(Base):
     __tablename__ = "production_order"
     
-    order_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    order_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     order_number = Column(String(50), unique=True, nullable=False)
-    pit_id = Column(UUID(as_uuid=True))
+    pit_id = Column(String(36))
     pit_code = Column(String(50))
     product_name = Column(String(200))
     product_code = Column(String(50))

@@ -4,7 +4,6 @@ Waybill models
 import uuid
 from datetime import datetime
 from sqlalchemy import Column, String, Text, DateTime, Integer, Numeric, ForeignKey, Index
-from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -12,17 +11,17 @@ from app.database import Base
 class Waybill(Base):
     __tablename__ = "waybill"
     
-    waybill_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    waybill_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     waybill_number = Column(String(50), unique=True, nullable=False)
-    order_id = Column(UUID(as_uuid=True), ForeignKey("purchase_order.order_id"))
+    order_id = Column(String(36), ForeignKey("purchase_order.order_id"))
     order_number = Column(String(50))
-    supplier_id = Column(UUID(as_uuid=True), ForeignKey("supplier.supplier_id"))
+    supplier_id = Column(String(36), ForeignKey("supplier.supplier_id"))
     carrier_name = Column(String(200))
     vehicle_number = Column(String(50))
     driver_name = Column(String(100))
     driver_phone = Column(String(50))
-    source_location = Column(JSONB)
-    dest_location = Column(JSONB)
+    source_location = Column(Text)
+    dest_location = Column(Text)
     cargo_type = Column(String(100))
     total_quantity = Column(Numeric(18, 4))
     total_weight = Column(Numeric(18, 4))
@@ -50,37 +49,33 @@ class Waybill(Base):
 class TrackingPoint(Base):
     __tablename__ = "tracking_point"
     
-    point_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    waybill_id = Column(UUID(as_uuid=True), ForeignKey("waybill.waybill_id"), nullable=False)
-    point_time = Column(DateTime, nullable=False)
-    latitude = Column(Numeric(10, 6))
+    point_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    waybill_id = Column(String(36), ForeignKey("waybill.waybill_id"), nullable=False)
+    location = Column(String(200))
+    description = Column(Text)
     longitude = Column(Numeric(10, 6))
-    location_name = Column(String(200))
-    speed = Column(Numeric(6, 2))
-    heading = Column(Integer)
-    event_type = Column(String(30))
-    remarks = Column(String(500))
-    create_time = Column(DateTime, default=datetime.utcnow)
+    latitude = Column(Numeric(10, 6))
+    status = Column(String(20))
+    record_time = Column(DateTime, default=datetime.utcnow)
     
     waybill = relationship("Waybill", back_populates="tracking_points")
     
-    __table_args__ = (Index("idx_track_waybill", "waybill_id"),)
+    __table_args__ = (Index("idx_tracking_waybill", "waybill_id"),)
 
 
 class SignRecord(Base):
     __tablename__ = "sign_record"
     
-    sign_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    waybill_id = Column(UUID(as_uuid=True), ForeignKey("waybill.waybill_id"), nullable=False)
-    sign_time = Column(DateTime, nullable=False)
-    signed_by = Column(String(100))
-    sign_type = Column(String(20))
-    sign_quantity = Column(Numeric(18, 4))
-    difference_quantity = Column(Numeric(18, 4))
+    record_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    waybill_id = Column(String(36), ForeignKey("waybill.waybill_id"), nullable=False)
+    signer_name = Column(String(100))
+    signer_phone = Column(String(50))
+    sign_time = Column(DateTime)
     sign_photo_url = Column(String(500))
+    total_packages = Column(Integer)
+    received_packages = Column(Integer)
+    damaged_packages = Column(Integer, default=0)
+    shortage_packages = Column(Integer, default=0)
     remarks = Column(Text)
-    create_time = Column(DateTime, default=datetime.utcnow)
     
     waybill = relationship("Waybill", back_populates="sign_record")
-    
-    __table_args__ = (Index("idx_sign_waybill", "waybill_id"),)

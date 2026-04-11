@@ -4,7 +4,6 @@ Purchase Order models
 import uuid
 from datetime import datetime
 from sqlalchemy import Column, String, Text, DateTime, Date, Integer, Numeric, ForeignKey, Index
-from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -12,15 +11,15 @@ from app.database import Base
 class PurchaseOrder(Base):
     __tablename__ = "purchase_order"
     
-    order_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    order_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     order_number = Column(String(50), unique=True, nullable=False)
-    supplier_id = Column(UUID(as_uuid=True), ForeignKey("supplier.supplier_id"), nullable=False)
+    supplier_id = Column(String(36), ForeignKey("supplier.supplier_id"), nullable=False)
     plan_type = Column(String(20))
     season_tag = Column(String(20))
     total_amount = Column(Numeric(18, 2), default=0)
     currency = Column(String(10), default="CNY")
-    payment_term = Column(JSONB)
-    delivery_term = Column(JSONB)
+    payment_term = Column(Text)
+    delivery_term = Column(Text)
     expected_delivery_date = Column(Date)
     actual_delivery_date = Column(Date)
     status = Column(String(20), default="草稿")
@@ -46,9 +45,9 @@ class PurchaseOrder(Base):
 class OrderLineItem(Base):
     __tablename__ = "order_line_item"
     
-    line_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    order_id = Column(UUID(as_uuid=True), ForeignKey("purchase_order.order_id"), nullable=False)
-    material_id = Column(UUID(as_uuid=True))
+    line_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    order_id = Column(String(36), ForeignKey("purchase_order.order_id"), nullable=False)
+    material_id = Column(String(36))
     material_name = Column(String(200), nullable=False)
     material_code = Column(String(50))
     specification = Column(String(200))
@@ -71,14 +70,10 @@ class OrderLineItem(Base):
 class OrderStatusHistory(Base):
     __tablename__ = "order_status_history"
     
-    history_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    order_id = Column(UUID(as_uuid=True), ForeignKey("purchase_order.order_id"), nullable=False)
+    history_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    order_id = Column(String(36), ForeignKey("purchase_order.order_id"), nullable=False)
     from_status = Column(String(20))
     to_status = Column(String(20), nullable=False)
     change_time = Column(DateTime, default=datetime.utcnow)
     changed_by = Column(String(100))
     reason = Column(String(500))
-    
-    order = relationship("PurchaseOrder", back_populates="status_history")
-    
-    __table_args__ = (Index("idx_history_order", "order_id"),)

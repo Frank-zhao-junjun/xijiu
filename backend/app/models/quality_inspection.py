@@ -4,7 +4,6 @@ Quality Inspection models
 import uuid
 from datetime import datetime
 from sqlalchemy import Column, String, Text, DateTime, Integer, Boolean, ForeignKey, Index
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -12,9 +11,9 @@ from app.database import Base
 class QualityInspection(Base):
     __tablename__ = "quality_inspection"
     
-    inspection_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    inspection_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     inspection_number = Column(String(50), unique=True, nullable=False)
-    batch_id = Column(UUID(as_uuid=True), ForeignKey("batch.batch_id"), nullable=False)
+    batch_id = Column(String(36), ForeignKey("batch.batch_id"), nullable=False)
     batch_number = Column(String(50))
     material_name = Column(String(200))
     material_code = Column(String(50))
@@ -48,20 +47,15 @@ class QualityInspection(Base):
 class InspectionItem(Base):
     __tablename__ = "inspection_item"
     
-    item_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    inspection_id = Column(UUID(as_uuid=True), ForeignKey("quality_inspection.inspection_id"), nullable=False)
-    item_name = Column(String(100), nullable=False)
-    item_category = Column(String(30))
-    standard_code = Column(String(50))
+    item_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    inspection_id = Column(String(36), ForeignKey("quality_inspection.inspection_id"), nullable=False)
+    item_name = Column(String(200), nullable=False)
     standard_value = Column(String(100))
-    test_method = Column(String(200))
-    unit = Column(String(20))
     actual_value = Column(String(100))
-    is_passed = Column(Boolean)
-    deviation = Column(String(50))
-    test_equipment = Column(String(100))
-    test_time = Column(DateTime)
-    line_number = Column(Integer)
+    unit = Column(String(20))
+    result = Column(String(20))  # 合格/不合格/待判定
+    is_key_item = Column(Boolean, default=False)
+    remarks = Column(Text)
     
     inspection = relationship("QualityInspection", back_populates="inspection_items")
     

@@ -4,7 +4,6 @@ Supplier models
 import uuid
 from datetime import datetime
 from sqlalchemy import Column, String, Text, DateTime, Integer, Date, ForeignKey, Index
-from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -12,7 +11,7 @@ from app.database import Base
 class Supplier(Base):
     __tablename__ = "supplier"
     
-    supplier_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    supplier_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     supplier_code = Column(String(50), unique=True, nullable=False)
     name = Column(String(200), nullable=False)
     type = Column(String(20), nullable=False)
@@ -23,7 +22,7 @@ class Supplier(Base):
     contact_email = Column(String(100))
     bank_name = Column(String(200))
     bank_account = Column(String(100))
-    address = Column(JSONB, default={})
+    address = Column(Text, default='{}')
     status = Column(String(20), default="待审核")
     credit_level = Column(String(10), default="C")
     create_time = Column(DateTime, default=datetime.utcnow)
@@ -42,8 +41,8 @@ class Supplier(Base):
 class SupplierRatingHistory(Base):
     __tablename__ = "supplier_rating_history"
     
-    rating_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    supplier_id = Column(UUID(as_uuid=True), ForeignKey("supplier.supplier_id"), nullable=False)
+    rating_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    supplier_id = Column(String(36), ForeignKey("supplier.supplier_id"), nullable=False)
     rating_year = Column(Integer, nullable=False)
     rating_level = Column(String(10), nullable=False)
     rating_date = Column(DateTime, nullable=False)
@@ -59,11 +58,14 @@ class SupplierRatingHistory(Base):
 class SupplierQualification(Base):
     __tablename__ = "supplier_qualification"
     
-    qualification_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    supplier_id = Column(UUID(as_uuid=True), ForeignKey("supplier.supplier_id"), nullable=False)
-    type = Column(String(50), nullable=False)
-    file_url = Column(String(500))
-    expire_date = Column(Date)
+    qual_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    supplier_id = Column(String(36), ForeignKey("supplier.supplier_id"), nullable=False)
+    qual_type = Column(String(50), nullable=False)
+    qual_name = Column(String(200))
+    qual_number = Column(String(100))
+    issue_date = Column(Date)
+    expiry_date = Column(Date)
+    issue_org = Column(String(200))
     status = Column(String(20), default="有效")
     create_time = Column(DateTime, default=datetime.utcnow)
     

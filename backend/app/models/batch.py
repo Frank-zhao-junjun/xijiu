@@ -3,8 +3,7 @@ Batch models
 """
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, Text, DateTime, Date, Numeric, ForeignKey, Index
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, String, Text, DateTime, Date, Numeric, Integer, ForeignKey, Index
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -12,11 +11,11 @@ from app.database import Base
 class Batch(Base):
     __tablename__ = "batch"
     
-    batch_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    batch_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     batch_number = Column(String(50), unique=True, nullable=False)
     source_type = Column(String(30))
-    source_order_id = Column(UUID(as_uuid=True))
-    material_id = Column(UUID(as_uuid=True))
+    source_order_id = Column(String(36))
+    material_id = Column(String(36))
     material_name = Column(String(200), nullable=False)
     material_code = Column(String(50))
     production_date = Column(Date)
@@ -28,7 +27,7 @@ class Batch(Base):
     base_liquor_year = Column(Integer)
     quantity = Column(Numeric(18, 4), nullable=False)
     unit = Column(String(20))
-    storage_location_id = Column(UUID(as_uuid=True))
+    storage_location_id = Column(String(36))
     storage_start_date = Column(DateTime)
     expiry_date = Column(Date)
     current_status = Column(String(20), default="待检")

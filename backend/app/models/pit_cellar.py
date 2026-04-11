@@ -3,15 +3,15 @@ Pit Cellar models
 """
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, Text, DateTime, Date, Numeric, Index
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, String, Text, DateTime, Date, Numeric, Integer, Index
+from sqlalchemy.orm import relationship
 from app.database import Base
 
 
 class PitCellar(Base):
     __tablename__ = "pit_cellar"
     
-    pit_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    pit_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     pit_code = Column(String(50), unique=True, nullable=False)
     pit_name = Column(String(100))
     cellar_name = Column(String(100))

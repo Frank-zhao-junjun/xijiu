@@ -3,20 +3,20 @@ Inventory models
 """
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, Text, DateTime, Numeric, ForeignKey, Index
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, String, Text, DateTime, Numeric, Integer, ForeignKey, Index
+from sqlalchemy.orm import relationship
 from app.database import Base
 
 
 class Inventory(Base):
     __tablename__ = "inventory"
     
-    inventory_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    material_id = Column(UUID(as_uuid=True), nullable=False)
+    inventory_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    material_id = Column(String(36), nullable=False)
     material_name = Column(String(200), nullable=False)
     material_code = Column(String(50))
-    storage_location_id = Column(UUID(as_uuid=True), nullable=False)
-    warehouse_id = Column(UUID(as_uuid=True))
+    storage_location_id = Column(String(36), nullable=False)
+    warehouse_id = Column(String(36))
     quantity = Column(Numeric(18, 4), default=0)
     available_quantity = Column(Numeric(18, 4), default=0)
     frozen_quantity = Column(Numeric(18, 4), default=0)
@@ -43,15 +43,15 @@ class Inventory(Base):
 class InventoryAlert(Base):
     __tablename__ = "inventory_alert"
     
-    alert_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    inventory_id = Column(UUID(as_uuid=True), ForeignKey("inventory.inventory_id"))
+    alert_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    inventory_id = Column(String(36), ForeignKey("inventory.inventory_id"))
     alert_type = Column(String(30))
     alert_level = Column(String(20))
     threshold = Column(Numeric(18, 4))
-    actual_value = Column(Numeric(18, 4))
-    is_resolved = Column(String(10), default="否")
-    resolve_time = Column(DateTime)
-    resolve_remarks = Column(Text)
+    current_value = Column(Numeric(18, 4))
+    message = Column(Text)
+    status = Column(String(20), default="未处理")
     create_time = Column(DateTime, default=datetime.utcnow)
-    
-    __table_args__ = (Index("idx_alert_resolved", "is_resolved"),)
+    handle_time = Column(DateTime)
+    handle_by = Column(String(100))
+    handle_remarks = Column(Text)
