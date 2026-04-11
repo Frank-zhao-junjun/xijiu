@@ -1,0 +1,19 @@
+:root {
+  --primary-color: #3E5BF2;
+  --success-color: #52C41A;
+  --warning-color: #FAAD14;
+  --error-color: #FF4D4F;
+  --bg-color: #F5F5F7;
+  --sidebar-bg: #3E5BF2;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFangSC', 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  color: #1A1A1A;
+  background-color: var(--bg-color);
+  min-height: 100vh;
+}
+#root { min-height: 100vh; }
+a { text-decoration: none; color: inherit; }

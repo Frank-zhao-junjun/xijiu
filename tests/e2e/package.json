@@ -1,0 +1,23 @@
+{
+  "name": "supply-chain-e2e-tests",
+  "version": "1.0.0",
+  "description": "E2E tests for Supply Chain Demo System",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug",
+    "test:api": "pytest ../api -v",
+    "test:all": "npm run test && npm run test:api",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.42.0",
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.0"
+  }
+}
