@@ -840,8 +840,6 @@ html, body {
   gap: 16px;
 }
 
-.progress-item {}
-
 .progress-header {
   display: flex;
   justify-content: space-between;

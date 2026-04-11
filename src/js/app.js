@@ -113,13 +113,23 @@ function addLogisticsEntry() {
 
   const item = document.createElement('div');
   item.className = 'timeline-item';
-  item.innerHTML = `
-    <span class="timeline-dot ${task.type}"></span>
-    <div class="timeline-content">
-      <div class="timeline-title">${task.text} — ${vehicle}</div>
-      <div class="timeline-time">${timeStr}</div>
-    </div>
-  `;
+
+  const dot = document.createElement('span');
+  dot.className = 'timeline-dot ' + task.type;
+
+  const content = document.createElement('div');
+  content.className = 'timeline-content';
+
+  const title = document.createElement('div');
+  title.className = 'timeline-title';
+  title.textContent = task.text + ' — ' + vehicle;
+
+  const time = document.createElement('div');
+  time.className = 'timeline-time';
+  time.textContent = timeStr;
+
+  content.append(title, time);
+  item.append(dot, content);
 
   // 插入到顶部
   timeline.insertBefore(item, timeline.firstChild);
@@ -197,15 +207,34 @@ function submitWorkOrder() {
 
   const tbody = document.querySelector('#page-operations .data-table tbody');
   if (tbody) {
-    const priorityClass = priority === '特急' ? 'critical' : priority === '紧急' ? 'warning' : '';
     const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>${woNum}</td>
-      <td>${device}</td>
-      <td>${desc}${priorityClass ? ` <span style="color:var(--error);font-size:11px">[${priority}]</span>` : ''}</td>
-      <td>${person}</td>
-      <td><span class="status-badge-sm waiting">待处理</span></td>
-    `;
+
+    const cellWoNum = document.createElement('td');
+    cellWoNum.textContent = woNum;
+
+    const cellDevice = document.createElement('td');
+    cellDevice.textContent = device;
+
+    const cellDesc = document.createElement('td');
+    cellDesc.textContent = desc;
+    if (priority === '紧急' || priority === '特急') {
+      const tag = document.createElement('span');
+      tag.style.cssText = 'color:var(--error);font-size:11px';
+      tag.textContent = '[' + priority + ']';
+      cellDesc.appendChild(document.createTextNode(' '));
+      cellDesc.appendChild(tag);
+    }
+
+    const cellPerson = document.createElement('td');
+    cellPerson.textContent = person;
+
+    const cellStatus = document.createElement('td');
+    const badge = document.createElement('span');
+    badge.className = 'status-badge-sm waiting';
+    badge.textContent = '待处理';
+    cellStatus.appendChild(badge);
+
+    row.append(cellWoNum, cellDevice, cellDesc, cellPerson, cellStatus);
     tbody.insertBefore(row, tbody.firstChild);
   }
 

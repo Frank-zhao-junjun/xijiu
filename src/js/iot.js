@@ -54,13 +54,26 @@ function buildFireSensors() {
 function renderSensorGrid(containerId, sensors) {
   const container = document.getElementById(containerId);
   if (!container) return;
-  container.innerHTML = sensors.map(s => `
-    <div class="sensor-card ${s.status !== 'ok' ? s.status : ''}">
-      <div class="sensor-zone">${s.zone}</div>
-      <div class="sensor-value">${s.value}</div>
-      <div class="sensor-status">${s.status === 'ok' ? '● 正常' : s.status === 'warn' ? '▲ 注意' : '✕ 异常'}</div>
-    </div>
-  `).join('');
+  container.textContent = '';
+  sensors.forEach(s => {
+    const card = document.createElement('div');
+    card.className = 'sensor-card' + (s.status !== 'ok' ? ' ' + s.status : '');
+
+    const zone = document.createElement('div');
+    zone.className = 'sensor-zone';
+    zone.textContent = s.zone;
+
+    const value = document.createElement('div');
+    value.className = 'sensor-value';
+    value.textContent = s.value;
+
+    const status = document.createElement('div');
+    status.className = 'sensor-status';
+    status.textContent = s.status === 'ok' ? '● 正常' : s.status === 'warn' ? '▲ 注意' : '✕ 异常';
+
+    card.append(zone, value, status);
+    container.appendChild(card);
+  });
 }
 
 function refreshIotSensors() {
