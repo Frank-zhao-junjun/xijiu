@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>白酒产业园智慧化建设平台</title>
+  <link rel="stylesheet" href="src/css/main.css" />
+</head>
+<body>
+  <!-- 侧边导航 -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <span class="logo-icon">🏭</span>
+        <span class="logo-text">智慧白酒产业园</span>
+      </div>
+    </div>
+    <ul class="nav-menu">
+      <li class="nav-item active" data-page="dashboard">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label">总览看板</span>
+      </li>
+      <li class="nav-item" data-page="iot">
+        <span class="nav-icon">📡</span>
+        <span class="nav-label">物联网感知</span>
+      </li>
+      <li class="nav-item" data-page="logistics">
+        <span class="nav-icon">🚛</span>
+        <span class="nav-label">智慧物流</span>
+      </li>
+      <li class="nav-item" data-page="planning">
+        <span class="nav-icon">🗺️</span>
+        <span class="nav-label">园区规划</span>
+      </li>
+      <li class="nav-item" data-page="operations">
+        <span class="nav-icon">🔧</span>
+        <span class="nav-label">运维管理</span>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- 主内容区 -->
+  <div class="main-content" id="main-content">
+    <!-- 顶部导航栏 -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="menu-toggle" id="menu-toggle">☰</button>
+        <h1 class="page-title" id="page-title">总览看板</h1>
+      </div>
+      <div class="topbar-right">
+        <div class="datetime" id="datetime"></div>
+        <div class="status-badge">
+          <span class="status-dot online"></span>
+          <span>系统运行正常</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- 页面内容 -->
+    <div class="page-container">
+      <!-- 总览看板 -->
+      <div class="page" id="page-dashboard">
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-icon">🌡️</div>
+            <div class="kpi-info">
+              <div class="kpi-label">园区平均温度</div>
+              <div class="kpi-value" id="kpi-temp">23.4°C</div>
+              <div class="kpi-trend up">↑ 0.2°C</div>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon">💧</div>
+            <div class="kpi-info">
+              <div class="kpi-label">平均湿度</div>
+              <div class="kpi-value" id="kpi-humidity">68%</div>
+              <div class="kpi-trend stable">— 稳定</div>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon">⚡</div>
+            <div class="kpi-info">
+              <div class="kpi-label">今日能耗</div>
+              <div class="kpi-value" id="kpi-energy">1,245 kWh</div>
+              <div class="kpi-trend down">↓ 3.1%</div>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon">🚛</div>
+            <div class="kpi-info">
+              <div class="kpi-label">今日车辆进出</div>
+              <div class="kpi-value" id="kpi-vehicles">87 辆</div>
+              <div class="kpi-trend up">↑ 5 辆</div>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon">📦</div>
+            <div class="kpi-info">
+              <div class="kpi-label">在库货物</div>
+              <div class="kpi-value" id="kpi-inventory">4,320 件</div>
+              <div class="kpi-trend stable">— 正常</div>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon">🔔</div>
+            <div class="kpi-info">
+              <div class="kpi-label">今日告警</div>
+              <div class="kpi-value warning" id="kpi-alerts">3 条</div>
+              <div class="kpi-trend down">↓ 已处理 2 条</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="card chart-card">
+            <div class="card-header">
+              <h3>近7日生产量趋势</h3>
+            </div>
+            <div class="card-body">
+              <canvas id="productionChart" width="100%" height="200"></canvas>
+            </div>
+          </div>
+
+          <div class="card chart-card">
+            <div class="card-header">
+              <h3>各区域能耗占比</h3>
+            </div>
+            <div class="card-body">
+              <canvas id="energyPieChart" width="100%" height="200"></canvas>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>实时告警</h3>
+            </div>
+            <div class="card-body">
+              <div class="alert-list" id="alert-list">
+                <div class="alert-item warning">
+                  <span class="alert-icon">⚠️</span>
+                  <div class="alert-content">
+                    <div class="alert-title">3号窖池温度偏高</div>
+                    <div class="alert-time">10:23 · 发酵车间</div>
+                  </div>
+                  <button class="btn-handle" onclick="handleAlert(this)">处理</button>
+                </div>
+                <div class="alert-item critical">
+                  <span class="alert-icon">🔴</span>
+                  <div class="alert-content">
+                    <div class="alert-title">物流区域闸机异常</div>
+                    <div class="alert-time">09:45 · 物流中心</div>
+                  </div>
+                  <button class="btn-handle" onclick="handleAlert(this)">处理</button>
+                </div>
+                <div class="alert-item info resolved">
+                  <span class="alert-icon">✅</span>
+                  <div class="alert-content">
+                    <div class="alert-title">智能水表读数异常 (已解决)</div>
+                    <div class="alert-time">08:30 · 酿造一车间</div>
+                  </div>
+                  <span class="resolved-tag">已处理</span>
+                </div>
+                <div class="alert-item info resolved">
+                  <span class="alert-icon">✅</span>
+                  <div class="alert-content">
+                    <div class="alert-title">消防传感器自检 (已解决)</div>
+                    <div class="alert-time">07:15 · 仓储区</div>
+                  </div>
+                  <span class="resolved-tag">已处理</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>今日物流动态</h3>
+            </div>
+            <div class="card-body">
+              <div class="logistics-timeline" id="logistics-timeline">
+                <div class="timeline-item">
+                  <span class="timeline-dot in"></span>
+                  <div class="timeline-content">
+                    <div class="timeline-title">粮食原料入库 — 苏A·88888</div>
+                    <div class="timeline-time">10:12</div>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <span class="timeline-dot out"></span>
+                  <div class="timeline-content">
+                    <div class="timeline-title">成品酒出库 — 苏B·12345</div>
+                    <div class="timeline-time">09:58</div>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <span class="timeline-dot in"></span>
+                  <div class="timeline-content">
+                    <div class="timeline-title">辅料入库 — 苏C·67890</div>
+                    <div class="timeline-time">09:30</div>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <span class="timeline-dot out"></span>
+                  <div class="timeline-content">
+                    <div class="timeline-title">空瓶回收 — 苏D·11111</div>
+                    <div class="timeline-time">09:15</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 物联网感知 -->
+      <div class="page hidden" id="page-iot">
+        <div class="section-header">
+          <h2>物联网感知体系</h2>
+          <p>实时监控园区内各类传感器数据，涵盖温湿度、烟感、酒精浓度、水务等多维度指标</p>
+        </div>
+
+        <div class="iot-stats">
+          <div class="iot-stat-card">
+            <div class="stat-num">256</div>
+            <div class="stat-label">接入传感器</div>
+          </div>
+          <div class="iot-stat-card">
+            <div class="stat-num green">241</div>
+            <div class="stat-label">在线节点</div>
+          </div>
+          <div class="iot-stat-card">
+            <div class="stat-num orange">12</div>
+            <div class="stat-label">告警节点</div>
+          </div>
+          <div class="iot-stat-card">
+            <div class="stat-num red">3</div>
+            <div class="stat-label">离线节点</div>
+          </div>
+        </div>
+
+        <div class="iot-grid">
+          <div class="card">
+            <div class="card-header">
+              <h3>🌡️ 温度传感器（各区域）</h3>
+            </div>
+            <div class="card-body">
+              <div class="sensor-grid" id="temp-sensors">
+                <!-- Dynamic content -->
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>💧 湿度传感器（各区域）</h3>
+            </div>
+            <div class="card-body">
+              <div class="sensor-grid" id="humidity-sensors">
+                <!-- Dynamic content -->
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>🍶 酒精浓度监测</h3>
+            </div>
+            <div class="card-body">
+              <div class="sensor-grid" id="alcohol-sensors">
+                <!-- Dynamic content -->
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>🔥 烟感/消防传感器</h3>
+            </div>
+            <div class="card-body">
+              <div class="sensor-grid" id="fire-sensors">
+                <!-- Dynamic content -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mt-20">
+          <div class="card-header">
+            <h3>传感器数据历史趋势（温度）</h3>
+          </div>
+          <div class="card-body">
+            <canvas id="iotTrendChart" width="100%" height="200"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- 智慧物流 -->
+      <div class="page hidden" id="page-logistics">
+        <div class="section-header">
+          <h2>智慧物流园区</h2>
+          <p>涵盖车辆调度、货物追踪、仓储管理、闸机管控等全流程智慧物流运营</p>
+        </div>
+
+        <div class="logistics-kpis">
+          <div class="kpi-card small">
+            <div class="kpi-label">今日入园车辆</div>
+            <div class="kpi-value">47 辆</div>
+          </div>
+          <div class="kpi-card small">
+            <div class="kpi-label">今日出园车辆</div>
+            <div class="kpi-value">40 辆</div>
+          </div>
+          <div class="kpi-card small">
+            <div class="kpi-label">园内车辆</div>
+            <div class="kpi-value">7 辆</div>
+          </div>
+          <div class="kpi-card small">
+            <div class="kpi-label">仓库利用率</div>
+            <div class="kpi-value">78.3%</div>
+          </div>
+          <div class="kpi-card small">
+            <div class="kpi-label">今日装卸次数</div>
+            <div class="kpi-value">32 次</div>
+          </div>
+        </div>
+
+        <div class="logistics-grid">
+          <div class="card">
+            <div class="card-header">
+              <h3>🚦 闸机实时状态</h3>
+            </div>
+            <div class="card-body">
+              <div class="gate-list">
+                <div class="gate-item open">
+                  <span class="gate-icon">🟢</span>
+                  <div class="gate-info">
+                    <div class="gate-name">东门主入口</div>
+                    <div class="gate-status">闸机开启 · 通行中</div>
+                  </div>
+                  <div class="gate-count">↑32 ↓28</div>
+                </div>
+                <div class="gate-item open">
+                  <span class="gate-icon">🟢</span>
+                  <div class="gate-info">
+                    <div class="gate-name">西门货运通道</div>
+                    <div class="gate-status">闸机开启 · 通行中</div>
+                  </div>
+                  <div class="gate-count">↑15 ↓12</div>
+                </div>
+                <div class="gate-item fault">
+                  <span class="gate-icon">🔴</span>
+                  <div class="gate-info">
+                    <div class="gate-name">南门备用通道</div>
+                    <div class="gate-status">异常 · 维修中</div>
+                  </div>
+                  <div class="gate-count">— —</div>
+                </div>
+                <div class="gate-item closed">
+                  <span class="gate-icon">⚫</span>
+                  <div class="gate-info">
+                    <div class="gate-name">北门应急出口</div>
+                    <div class="gate-status">已关闭 · 仅应急</div>
+                  </div>
+                  <div class="gate-count">— —</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>📦 仓库区域占用</h3>
+            </div>
+            <div class="card-body">
+              <div class="warehouse-list" id="warehouse-list">
+                <div class="warehouse-item">
+                  <div class="warehouse-name">原料仓 A</div>
+                  <div class="warehouse-bar-wrap">
+                    <div class="warehouse-bar" style="width: 65%">65%</div>
+                  </div>
+                </div>
+                <div class="warehouse-item">
+                  <div class="warehouse-name">原料仓 B</div>
+                  <div class="warehouse-bar-wrap">
+                    <div class="warehouse-bar" style="width: 82%">82%</div>
+                  </div>
+                </div>
+                <div class="warehouse-item">
+                  <div class="warehouse-name">成品酒仓 A</div>
+                  <div class="warehouse-bar-wrap">
+                    <div class="warehouse-bar high" style="width: 91%">91%</div>
+                  </div>
+                </div>
+                <div class="warehouse-item">
+                  <div class="warehouse-name">成品酒仓 B</div>
+                  <div class="warehouse-bar-wrap">
+                    <div class="warehouse-bar" style="width: 54%">54%</div>
+                  </div>
+                </div>
+                <div class="warehouse-item">
+                  <div class="warehouse-name">半成品暂存区</div>
+                  <div class="warehouse-bar-wrap">
+                    <div class="warehouse-bar" style="width: 73%">73%</div>
+                  </div>
+                </div>
+                <div class="warehouse-item">
+                  <div class="warehouse-name">包装材料仓</div>
+                  <div class="warehouse-bar-wrap">
+                    <div class="warehouse-bar low" style="width: 38%">38%</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>🚛 车辆实时调度</h3>
+            </div>
+            <div class="card-body">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>车牌</th>
+                    <th>任务</th>
+                    <th>状态</th>
+                    <th>目标仓库</th>
+                  </tr>
+                </thead>
+                <tbody id="vehicle-table">
+                  <tr>
+                    <td>苏A·88888</td>
+                    <td>原料入库</td>
+                    <td><span class="status-badge-sm in-progress">装卸中</span></td>
+                    <td>原料仓 A</td>
+                  </tr>
+                  <tr>
+                    <td>苏B·12345</td>
+                    <td>成品出库</td>
+                    <td><span class="status-badge-sm done">已完成</span></td>
+                    <td>成品酒仓 A</td>
+                  </tr>
+                  <tr>
+                    <td>苏C·67890</td>
+                    <td>辅料入库</td>
+                    <td><span class="status-badge-sm waiting">等待中</span></td>
+                    <td>包装材料仓</td>
+                  </tr>
+                  <tr>
+                    <td>苏D·54321</td>
+                    <td>内部转运</td>
+                    <td><span class="status-badge-sm in-progress">运输中</span></td>
+                    <td>半成品暂存区</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>📈 近7日物流吞吐量</h3>
+            </div>
+            <div class="card-body">
+              <canvas id="logisticsChart" width="100%" height="200"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 园区规划 -->
+      <div class="page hidden" id="page-planning">
+        <div class="section-header">
+          <h2>智慧园区规划</h2>
+          <p>园区功能分区、基础设施布局及智慧化改造规划一览</p>
+        </div>
+
+        <div class="planning-grid">
+          <div class="card planning-map-card">
+            <div class="card-header">
+              <h3>🗺️ 园区平面规划图</h3>
+            </div>
+            <div class="card-body">
+              <div class="park-map" id="park-map">
+                <div class="map-zone production" style="left:5%;top:10%;width:38%;height:40%">
+                  <span class="zone-label">生产区</span>
+                  <div class="zone-detail">酿造车间 · 蒸馏车间 · 窖池区</div>
+                </div>
+                <div class="map-zone storage" style="left:5%;top:55%;width:38%;height:30%">
+                  <span class="zone-label">仓储区</span>
+                  <div class="zone-detail">原料仓 · 成品仓 · 暂存区</div>
+                </div>
+                <div class="map-zone logistics" style="left:48%;top:10%;width:25%;height:75%">
+                  <span class="zone-label">物流区</span>
+                  <div class="zone-detail">装卸站台 · 闸机 · 停车场</div>
+                </div>
+                <div class="map-zone office" style="left:78%;top:10%;width:19%;height:35%">
+                  <span class="zone-label">办公区</span>
+                  <div class="zone-detail">管理中心 · 展示中心</div>
+                </div>
+                <div class="map-zone env" style="left:78%;top:50%;width:19%;height:35%">
+                  <span class="zone-label">环保区</span>
+                  <div class="zone-detail">污水处理 · 废气治理</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>📋 规划建设进度</h3>
+            </div>
+            <div class="card-body">
+              <div class="progress-list">
+                <div class="progress-item">
+                  <div class="progress-header">
+                    <span class="progress-name">智慧物联网基础设施</span>
+                    <span class="progress-pct complete">100%</span>
+                  </div>
+                  <div class="progress-bar-wrap">
+                    <div class="progress-bar" style="width:100%"></div>
+                  </div>
+                  <div class="progress-desc">全部传感器节点已部署完成</div>
+                </div>
+                <div class="progress-item">
+                  <div class="progress-header">
+                    <span class="progress-name">智慧安防系统</span>
+                    <span class="progress-pct complete">100%</span>
+                  </div>
+                  <div class="progress-bar-wrap">
+                    <div class="progress-bar" style="width:100%"></div>
+                  </div>
+                  <div class="progress-desc">摄像头、门禁、消防联动全面上线</div>
+                </div>
+                <div class="progress-item">
+                  <div class="progress-header">
+                    <span class="progress-name">物流管理平台</span>
+                    <span class="progress-pct in-progress">85%</span>
+                  </div>
+                  <div class="progress-bar-wrap">
+                    <div class="progress-bar" style="width:85%"></div>
+                  </div>
+                  <div class="progress-desc">闸机联动与车牌识别系统调试中</div>
+                </div>
+                <div class="progress-item">
+                  <div class="progress-header">
+                    <span class="progress-name">能源管理系统</span>
+                    <span class="progress-pct in-progress">70%</span>
+                  </div>
+                  <div class="progress-bar-wrap">
+                    <div class="progress-bar" style="width:70%"></div>
+                  </div>
+                  <div class="progress-desc">电、气、水三表系统部署中</div>
+                </div>
+                <div class="progress-item">
+                  <div class="progress-header">
+                    <span class="progress-name">生产数据采集系统</span>
+                    <span class="progress-pct planning">40%</span>
+                  </div>
+                  <div class="progress-bar-wrap">
+                    <div class="progress-bar warn" style="width:40%"></div>
+                  </div>
+                  <div class="progress-desc">发酵监测模块实施中</div>
+                </div>
+                <div class="progress-item">
+                  <div class="progress-header">
+                    <span class="progress-name">数字孪生展示中心</span>
+                    <span class="progress-pct planning">20%</span>
+                  </div>
+                  <div class="progress-bar-wrap">
+                    <div class="progress-bar warn" style="width:20%"></div>
+                  </div>
+                  <div class="progress-desc">规划设计阶段</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card full-width">
+            <div class="card-header">
+              <h3>🏗️ 智慧化建设里程碑</h3>
+            </div>
+            <div class="card-body">
+              <div class="milestone-timeline">
+                <div class="milestone done">
+                  <div class="milestone-dot">✓</div>
+                  <div class="milestone-content">
+                    <div class="milestone-date">2024 Q1</div>
+                    <div class="milestone-title">基础网络与IoT平台搭建</div>
+                    <div class="milestone-desc">完成园区5G+工业以太网基础网络建设，部署IoT管理平台</div>
+                  </div>
+                </div>
+                <div class="milestone done">
+                  <div class="milestone-dot">✓</div>
+                  <div class="milestone-content">
+                    <div class="milestone-date">2024 Q2</div>
+                    <div class="milestone-title">传感器网络全面覆盖</div>
+                    <div class="milestone-desc">完成温湿度、酒精浓度、烟感等256个传感节点部署</div>
+                  </div>
+                </div>
+                <div class="milestone done">
+                  <div class="milestone-dot">✓</div>
+                  <div class="milestone-content">
+                    <div class="milestone-date">2024 Q3</div>
+                    <div class="milestone-title">智慧安防系统上线</div>
+                    <div class="milestone-desc">视频监控、门禁、消防联动系统全面上线运行</div>
+                  </div>
+                </div>
+                <div class="milestone active">
+                  <div class="milestone-dot">⟳</div>
+                  <div class="milestone-content">
+                    <div class="milestone-date">2024 Q4 – 2025 Q1</div>
+                    <div class="milestone-title">物流与仓储智能化</div>
+                    <div class="milestone-desc">闸机智能管控、车牌识别、WMS仓储管理系统建设中</div>
+                  </div>
+                </div>
+                <div class="milestone future">
+                  <div class="milestone-dot">○</div>
+                  <div class="milestone-content">
+                    <div class="milestone-date">2025 Q2</div>
+                    <div class="milestone-title">生产过程数字化</div>
+                    <div class="milestone-desc">发酵过程监测、白酒品质AI检测系统建设</div>
+                  </div>
+                </div>
+                <div class="milestone future">
+                  <div class="milestone-dot">○</div>
+                  <div class="milestone-content">
+                    <div class="milestone-date">2025 Q3–Q4</div>
+                    <div class="milestone-title">数字孪生平台上线</div>
+                    <div class="milestone-desc">构建产业园区三维数字孪生模型，实现全要素可视化管理</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 运维管理 -->
+      <div class="page hidden" id="page-operations">
+        <div class="section-header">
+          <h2>运维管理</h2>
+          <p>园区设备全生命周期管理、预防性维护与工单流转</p>
+        </div>
+
+        <div class="ops-kpis">
+          <div class="kpi-card small">
+            <div class="kpi-label">设备总数</div>
+            <div class="kpi-value">318 台</div>
+          </div>
+          <div class="kpi-card small">
+            <div class="kpi-label">正常运行</div>
+            <div class="kpi-value green">305 台</div>
+          </div>
+          <div class="kpi-card small">
+            <div class="kpi-label">维修中</div>
+            <div class="kpi-value orange">8 台</div>
+          </div>
+          <div class="kpi-card small">
+            <div class="kpi-label">待检修</div>
+            <div class="kpi-value">5 台</div>
+          </div>
+          <div class="kpi-card small">
+            <div class="kpi-label">本月工单</div>
+            <div class="kpi-value">24 单</div>
+          </div>
+        </div>
+
+        <div class="ops-grid">
+          <div class="card">
+            <div class="card-header">
+              <h3>🔧 维修工单</h3>
+              <button class="btn-primary" onclick="createWorkOrder()">+ 新建工单</button>
+            </div>
+            <div class="card-body">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>工单号</th>
+                    <th>设备</th>
+                    <th>故障描述</th>
+                    <th>负责人</th>
+                    <th>状态</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>WO-2024-0021</td>
+                    <td>南门闸机</td>
+                    <td>闸机无法正常抬杆</td>
+                    <td>李工</td>
+                    <td><span class="status-badge-sm in-progress">处理中</span></td>
+                  </tr>
+                  <tr>
+                    <td>WO-2024-0020</td>
+                    <td>3号窖池温控</td>
+                    <td>温度控制器故障</td>
+                    <td>王工</td>
+                    <td><span class="status-badge-sm waiting">待处理</span></td>
+                  </tr>
+                  <tr>
+                    <td>WO-2024-0019</td>
+                    <td>智能水表 #A12</td>
+                    <td>读数异常，已校准</td>
+                    <td>赵工</td>
+                    <td><span class="status-badge-sm done">已完成</span></td>
+                  </tr>
+                  <tr>
+                    <td>WO-2024-0018</td>
+                    <td>叉车 #3</td>
+                    <td>电池续航不足，需更换</td>
+                    <td>刘工</td>
+                    <td><span class="status-badge-sm done">已完成</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>📅 设备巡检计划</h3>
+            </div>
+            <div class="card-body">
+              <div class="inspection-list">
+                <div class="inspection-item upcoming">
+                  <span class="inspection-icon">🔍</span>
+                  <div class="inspection-info">
+                    <div class="inspection-name">消防设施全面检查</div>
+                    <div class="inspection-date">计划日期：2024-12-20</div>
+                  </div>
+                  <span class="inspection-status upcoming">即将进行</span>
+                </div>
+                <div class="inspection-item upcoming">
+                  <span class="inspection-icon">🔍</span>
+                  <div class="inspection-info">
+                    <div class="inspection-name">传感器节点季度自检</div>
+                    <div class="inspection-date">计划日期：2024-12-22</div>
+                  </div>
+                  <span class="inspection-status upcoming">即将进行</span>
+                </div>
+                <div class="inspection-item done">
+                  <span class="inspection-icon">✅</span>
+                  <div class="inspection-info">
+                    <div class="inspection-name">闸机设备月检</div>
+                    <div class="inspection-date">完成日期：2024-12-05</div>
+                  </div>
+                  <span class="inspection-status done">已完成</span>
+                </div>
+                <div class="inspection-item done">
+                  <span class="inspection-icon">✅</span>
+                  <div class="inspection-info">
+                    <div class="inspection-name">电气系统安全检查</div>
+                    <div class="inspection-date">完成日期：2024-12-01</div>
+                  </div>
+                  <span class="inspection-status done">已完成</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>📊 设备运行健康度</h3>
+            </div>
+            <div class="card-body">
+              <canvas id="healthChart" width="100%" height="200"></canvas>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>⚙️ 设备台账</h3>
+            </div>
+            <div class="card-body">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>设备名称</th>
+                    <th>型号</th>
+                    <th>位置</th>
+                    <th>健康</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>蒸馏机 #1</td>
+                    <td>ZL-5000</td>
+                    <td>蒸馏车间</td>
+                    <td><span class="health-badge good">良好</span></td>
+                  </tr>
+                  <tr>
+                    <td>温控系统 #3</td>
+                    <td>TC-200</td>
+                    <td>窖池区</td>
+                    <td><span class="health-badge warn">注意</span></td>
+                  </tr>
+                  <tr>
+                    <td>叉车 #1</td>
+                    <td>FD-3T</td>
+                    <td>仓储区</td>
+                    <td><span class="health-badge good">良好</span></td>
+                  </tr>
+                  <tr>
+                    <td>AGV搬运车 #2</td>
+                    <td>AGV-100</td>
+                    <td>物流区</td>
+                    <td><span class="health-badge good">良好</span></td>
+                  </tr>
+                  <tr>
+                    <td>东门闸机</td>
+                    <td>ZJ-Gate</td>
+                    <td>东门</td>
+                    <td><span class="health-badge good">良好</span></td>
+                  </tr>
+                  <tr>
+                    <td>南门闸机</td>
+                    <td>ZJ-Gate</td>
+                    <td>南门</td>
+                    <td><span class="health-badge error">故障</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 新建工单弹窗 -->
+  <div class="modal hidden" id="workorder-modal">
+    <div class="modal-overlay" onclick="closeModal()"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>新建维修工单</h3>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>设备名称</label>
+          <input type="text" id="wo-device" placeholder="请输入设备名称" />
+        </div>
+        <div class="form-group">
+          <label>故障描述</label>
+          <textarea id="wo-desc" rows="3" placeholder="请描述故障情况"></textarea>
+        </div>
+        <div class="form-group">
+          <label>负责人</label>
+          <select id="wo-person">
+            <option>李工</option>
+            <option>王工</option>
+            <option>赵工</option>
+            <option>刘工</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>优先级</label>
+          <select id="wo-priority">
+            <option>普通</option>
+            <option>紧急</option>
+            <option>特急</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeModal()">取消</button>
+        <button class="btn-primary" onclick="submitWorkOrder()">提交工单</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="src/js/charts.js"></script>
+  <script src="src/js/iot.js"></script>
+  <script src="src/js/app.js"></script>
+</body>
+</html>
