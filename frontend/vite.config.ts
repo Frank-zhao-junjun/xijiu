@@ -58,6 +58,10 @@ export default defineConfig({
       '/contract-templates': {
         target: 'http://localhost:8000',
         changeOrigin: true
+      },
+      '/announcements': {
+        target: 'http://localhost:8000',
+        changeOrigin: true
       }
     }
   }

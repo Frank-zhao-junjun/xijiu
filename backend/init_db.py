@@ -3,7 +3,7 @@ import asyncio
 import json
 from datetime import datetime, timedelta
 from app.core.database import async_engine, Base, AsyncSessionLocal
-from app.models.supply_chain import (Supplier, Material, Product, PurchaseOrder, PurchaseOrderItem, SalesOrder, ProductionRecord, MaterialUsage, Warehouse, ShipmentNote, ShipmentNoteItem, SupplierInvitation, SupplierRegistration, SupplierCertification, SupplierAlert, QualificationProject, QualificationSubmission, SourcingProject, SourcingInvitation, SourcingBid, SourcingAward, ContractTemplate, Contract, ContractComment, PurchaseForecast, ForecastResponse, DeliverySchedule, ASN, Receipt, SettlementStatement, Invoice, Payment, User)
+from app.models.supply_chain import (Supplier, Material, Product, PurchaseOrder, PurchaseOrderItem, SalesOrder, ProductionRecord, MaterialUsage, Warehouse, ShipmentNote, ShipmentNoteItem, SupplierInvitation, SupplierRegistration, SupplierCertification, SupplierAlert, QualificationProject, QualificationSubmission, SourcingProject, SourcingInvitation, SourcingBid, SourcingAward, ContractTemplate, Contract, ContractComment, PurchaseForecast, ForecastResponse, DeliverySchedule, ASN, Receipt, SettlementStatement, Invoice, Payment, User, Announcement, AnnouncementRead, AnnouncementType)
 
 async def init_database():
     print("Creating database tables...")
@@ -195,6 +195,58 @@ async def seed_demo_data():
             ),
         ]
         session.add_all(alerts)
+
+        # ===== 公告栏种子数据 =====
+        from app.models.supply_chain import Announcement, AnnouncementType
+        
+        announcements = [
+            Announcement(
+                title="【重要】2026年度供应商资质年审通知",
+                content="各供应商伙伴：\n\n根据《供应商管理办法》规定，现启动2026年度供应商资质年审工作。请各供应商于5月31日前完成以下事项：\n\n1. 更新营业执照、食品生产许可证等证照信息\n2. 提交上年度供货质量评估报告\n3. 确认本年度供货能力及价格清单\n\n逾期未完成的供应商，将影响2026年度采购订单分配。感谢配合！",
+                announcement_type=AnnouncementType.ANNOUNCEMENT,
+                priority=2,
+                is_pinned=1,
+                published_by="张明远",
+                view_count=128
+            ),
+            Announcement(
+                title="关于规范送货单据填写的通知",
+                content="为确保入库流程顺畅，请各供应商在送货时注意以下事项：\n\n1. 送货单需加盖供应商公章或合同专用章\n2. 批号必须与质检报告一致\n3. 随货附上对应的质检报告原件\n4. 运输车辆信息需提前在系统中登记\n\n如有疑问，请联系采购部李经理（分机：8012）。",
+                announcement_type=AnnouncementType.GUIDE,
+                priority=1,
+                is_pinned=0,
+                published_by="李采购员",
+                view_count=86
+            ),
+            Announcement(
+                title="关于实施供应商分级管理的通知",
+                content="各供应商伙伴：\n\n为进一步优化供应链管理，我司将自2026年4月1日起实施供应商分级管理方案：\n\n【A级供应商】优先合作、账期优惠、新品推荐\n【B级供应商】稳定合作、标准账期\n【C级供应商】观察期、缩减订单份额\n【D级供应商】淘汰名单\n\n评级依据：质量评分(40%) + 交期评分(30%) + 服务评分(20%) + 资质合规(10%)\n\n详情请查阅附件《供应商分级评定办法》。",
+                announcement_type=AnnouncementType.POLICY,
+                priority=1,
+                is_pinned=0,
+                published_by="张明远",
+                view_count=215
+            ),
+            Announcement(
+                title="端午节假日期间送货安排",
+                content="各供应商：\n\n端午节假期（6月10日-6月12日）期间仓库收货安排如下：\n\n- 6月9日（周一）：最后收货日\n- 6月10日-12日：停止收货\n- 6月13日（周四）：恢复正常\n\n请提前安排送货计划，避免货物滞留在途。如有紧急情况，请联系仓库值班电话：139-0000-8888。",
+                announcement_type=AnnouncementType.ANNOUNCEMENT,
+                priority=0,
+                is_pinned=0,
+                published_by="王采购员",
+                view_count=54
+            ),
+            Announcement(
+                title="供应商门户系统升级通知",
+                content="各供应商伙伴：\n\n我司供应商门户系统将于4月20日凌晨2:00-6:00进行版本升级，届时系统将暂停服务。\n\n升级内容：\n1. 新增移动端H5版本\n2. 优化订单推送通知\n3. 增加对账单在线确认功能\n\n如有紧急业务处理，请联系采购部值班人员。给您带来不便，敬请谅解！",
+                announcement_type=AnnouncementType.ANNOUNCEMENT,
+                priority=1,
+                is_pinned=0,
+                published_by="系统管理员",
+                view_count=102
+            ),
+        ]
+        session.add_all(announcements)
 
         await session.commit()
         print("✅ Demo data added successfully!")

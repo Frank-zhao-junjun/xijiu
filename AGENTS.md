@@ -178,6 +178,13 @@ npx server -l 5000
 | GET | `/inspections/` | 质检单列表 | ✅ |
 | POST | `/inspections/` | 创建质检单 | ✅ |
 | GET | `/inventory/` | 库存查询 | ✅ |
+| GET | `/announcements/` | 公告列表 | ✅ |
+| POST | `/announcements/` | 发布公告 | ✅ |
+| GET | `/announcements/{id}` | 公告详情 | ✅ |
+| PUT | `/announcements/{id}` | 编辑公告 | ✅ |
+| DELETE | `/announcements/{id}` | 删除公告 | ✅ |
+| POST | `/announcements/{id}/record-read` | 记录阅读 | ✅ |
+| GET | `/announcements/types/summary` | 类型统计 | ✅ |
 
 ### 仪表盘 & 通用
 
@@ -233,6 +240,12 @@ npx server -l 5000
   - US-201~US-208 全部完成
   - 寻源项目创建、供应商邀请、投标管理、开标比价、授标、合同生成与签署
   - 前端重构：去除数据中台，拆分为采购端/供应商端双入口
+
+- **公告栏功能**：
+  - 公告、政策、操作指引三种类型
+  - 采购端：发布、编辑、删除公告
+  - 供应商端：查看公告、记录阅读
+  - 支持置顶、优先级、分类筛选
 
 ### 待执行
 

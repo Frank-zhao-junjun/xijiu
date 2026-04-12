@@ -77,3 +77,65 @@ export const getBidForm = (projectId: number, supplierId: number) =>
   api.get(`/sourcing/projects/${projectId}/bid`, { params: { supplier_id: supplierId } })
 export const submitBid = (projectId: number, data: any) =>
   api.post(`/sourcing/projects/${projectId}/bid`, data)
+
+// ============ 公告栏 API ============
+
+export interface AnnouncementItem {
+  id: number
+  title: string
+  content: string
+  announcement_type: 'announcement' | 'policy' | 'guide'
+  priority: number
+  is_pinned: boolean
+  attachments: { name: string; url: string }[]
+  published_by: string
+  published_at: string
+  valid_from: string
+  valid_until: string | null
+  view_count: number
+  created_at: string
+}
+
+export interface AnnouncementListResponse {
+  total: number
+  page: number
+  page_size: number
+  items: AnnouncementItem[]
+}
+
+export const getAnnouncements = (params?: {
+  announcement_type?: string
+  keyword?: string
+  page?: number
+  page_size?: number
+}) => api.get<AnnouncementListResponse>('/announcements/', { params })
+
+export const getAnnouncement = (id: number) => api.get<AnnouncementItem>(`/announcements/${id}`)
+
+export const createAnnouncement = (data: {
+  title: string
+  content: string
+  announcement_type: string
+  priority?: number
+  is_pinned?: boolean
+  published_by?: string
+  valid_until?: string
+}) => api.post('/announcements/', data)
+
+export const updateAnnouncement = (id: number, data: Partial<{
+  title: string
+  content: string
+  announcement_type: string
+  priority: number
+  is_pinned: boolean
+  valid_until: string
+}>) => api.put(`/announcements/${id}`, data)
+
+export const deleteAnnouncement = (id: number) => api.delete(`/announcements/${id}`)
+
+export const recordAnnouncementRead = (announcementId: number, userId: number) =>
+  api.post(`/announcements/${announcementId}/record-read?user_id=${userId}`)
+
+export const getAnnouncementTypesSummary = () =>
+  api.get<{ type: string; label: string; count: number }[]>('/announcements/types/summary')
+

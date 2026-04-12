@@ -524,6 +524,46 @@ class ContractComment(Base):
     contract = relationship("Contract")
 
 
+# ==================== 公告栏模型 ====================
+
+class AnnouncementType(str, enum.Enum):
+    ANNOUNCEMENT = "announcement"  # 公告
+    POLICY = "policy"              # 政策
+    GUIDE = "guide"                # 操作指引
+
+
+class Announcement(Base):
+    """系统公告"""
+    __tablename__ = "announcements"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(200), nullable=False)
+    content = Column(Text, nullable=False)          # 公告正文（支持富文本）
+    announcement_type = Column(SQLEnum(AnnouncementType), default=AnnouncementType.ANNOUNCEMENT)
+    priority = Column(Integer, default=0)            # 优先级: 0-普通, 1-重要, 2-紧急
+    is_pinned = Column(Integer, default=0)           # 是否置顶
+    attachments = Column(Text, default="[]")        # 附件 JSON: [{name, url}]
+    published_by = Column(String(100))               # 发布人
+    published_at = Column(DateTime, default=datetime.utcnow)
+    valid_from = Column(DateTime, default=datetime.utcnow)  # 生效时间
+    valid_until = Column(DateTime, nullable=True)   # 失效时间（可选）
+    view_count = Column(Integer, default=0)          # 阅读次数
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class AnnouncementRead(Base):
+    """公告阅读记录"""
+    __tablename__ = "announcement_reads"
+
+    id = Column(Integer, primary_key=True, index=True)
+    announcement_id = Column(Integer, ForeignKey("announcements.id"), nullable=False)
+    user_id = Column(Integer, nullable=False)        # 阅读者用户ID
+    read_at = Column(DateTime, default=datetime.utcnow)
+
+    announcement = relationship("Announcement")
+
+
 # ==================== Phase 3: 预测与订单执行模型 ====================
 
 class ForecastStatus(str, enum.Enum):

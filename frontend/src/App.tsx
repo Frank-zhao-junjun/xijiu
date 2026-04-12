@@ -9,6 +9,7 @@ import BuyerHome from './pages/buyer/BuyerHome'
 import SourcingList from './pages/buyer/SourcingList'
 import SourcingDetail from './pages/buyer/SourcingDetail'
 import ContractList from './pages/buyer/ContractList'
+import BuyerAnnouncementList from './pages/buyer/AnnouncementList'
 import PurchaseOrderList from './pages/PurchaseOrderList'
 import SupplierList from './pages/SupplierList'
 import ReceiptList from './pages/ReceiptList'
@@ -21,6 +22,7 @@ import InvitationList from './pages/supplier/InvitationList'
 import BidList from './pages/supplier/BidList'
 import SupplierContractList from './pages/supplier/ContractList'
 import SupplierOrderList from './pages/supplier/OrderList'
+import SupplierAnnouncementList from './pages/supplier/AnnouncementList'
 
 const theme = { token: { colorPrimary: '#3E5BF2', borderRadius: 4 } }
 
@@ -44,6 +46,7 @@ function App() {
               <Route path="receipts" element={<ReceiptList />} />
               <Route path="inventory" element={<InventoryList />} />
               <Route path="inspections" element={<InspectionList />} />
+              <Route path="announcements" element={<BuyerAnnouncementList />} />
             </Route>
 
             {/* 供应商端 */}
@@ -53,6 +56,7 @@ function App() {
               <Route path="bids" element={<BidList />} />
               <Route path="contracts" element={<SupplierContractList />} />
               <Route path="orders" element={<SupplierOrderList />} />
+              <Route path="announcements" element={<SupplierAnnouncementList />} />
             </Route>
           </Route>
         </Routes>

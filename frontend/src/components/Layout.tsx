@@ -4,7 +4,8 @@ import { Layout as AntLayout, Menu, Badge, Dropdown, Button } from 'antd'
 import {
   DashboardOutlined, FileTextOutlined, TeamOutlined, ShoppingOutlined,
   InboxOutlined, AppstoreOutlined, AuditOutlined, SwapOutlined,
-  TrophyOutlined, ThunderboltOutlined, ContainerOutlined, MessageOutlined
+  TrophyOutlined, ThunderboltOutlined, ContainerOutlined, MessageOutlined,
+  BellOutlined
 } from '@ant-design/icons'
 
 const { Sider, Content, Header } = AntLayout
@@ -25,6 +26,9 @@ const buyerItems = [
     { key: '/buyer/inventory', icon: <AppstoreOutlined />, label: '库存查询' },
     { key: '/buyer/inspections', icon: <AuditOutlined />, label: '质检单' },
   ]},
+  { type: 'group' as const, label: '系统设置', children: [
+    { key: '/buyer/announcements', icon: <BellOutlined />, label: '公告管理' },
+  ]},
 ]
 
 // 供应商端菜单
@@ -37,6 +41,9 @@ const supplierItems = [
   { type: 'group' as const, label: '订单执行', children: [
     { key: '/supplier/orders', icon: <ShoppingOutlined />, label: '销售订单' },
     { key: '/supplier/contracts', icon: <ContainerOutlined />, label: '合同管理' },
+  ]},
+  { type: 'group' as const, label: '信息共享', children: [
+    { key: '/supplier/announcements', icon: <BellOutlined />, label: '公告通知' },
   ]},
 ]
 
