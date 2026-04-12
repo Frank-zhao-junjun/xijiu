@@ -13,7 +13,7 @@ export const getSupplierStats = () => Promise.resolve({}) // 暂无
 
 // Purchase Orders API (后端使用 purchase-orders)
 export const getOrders = (params = {}) => api.get('/purchase-orders/', { params })
-export const getOrderById = (id) => api.get(`/purchase-orders/${id}`)
+export const getOrderById = (id: number | string) => api.get(`/purchase-orders/${id}`)
 export const getOrderStats = () => Promise.resolve({}) // 暂无
 
 // Materials/Inventory API (后端使用 materials)

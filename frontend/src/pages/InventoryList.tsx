@@ -15,7 +15,8 @@ const InventoryList: React.FC = () => {
     setLoading(true)
     try {
       const [i, s] = await Promise.all([getInventory({ page: 1, page_size: 20 }), getInventoryStats()])
-      setInventory(i.items); setTotal(i.total); setStats(s)
+      const data = Array.isArray(i) ? i : []
+      setInventory(data); setTotal(data.length); setStats(s)
     } finally { setLoading(false) }
   }
 
@@ -25,15 +26,18 @@ const InventoryList: React.FC = () => {
   }
 
   const columns = [
-    { title: '物料编码', dataIndex: 'material_code', key: 'material_code', width: 120 },
-    { title: '物料名称', dataIndex: 'material_name', key: 'material_name' },
-    { title: '库存数量', dataIndex: 'quantity', key: 'quantity', width: 100, render: (v: number, r: any) => `${v} ${r.unit}` },
-    { title: '可用数量', dataIndex: 'available_quantity', key: 'available_quantity', width: 100 },
-    { title: '冻结数量', dataIndex: 'frozen_quantity', key: 'frozen_quantity', width: 100 },
-    { title: '单位成本', dataIndex: 'unit_cost', key: 'unit_cost', width: 100, render: (v: number) => v ? `¥${v}` : '-' },
-    { title: '总价值', dataIndex: 'total_value', key: 'total_value', width: 120, render: (v: number) => v ? `¥${v.toLocaleString()}` : '-' },
-    { title: '安全库存', dataIndex: 'safe_stock', key: 'safe_stock', width: 100 },
-    { title: '状态', dataIndex: 'status', key: 'status', width: 80, render: (v: string) => <Tag color={statusMap[v]?.color}>{statusMap[v]?.text || v}</Tag> }
+    { title: '物料名称', dataIndex: 'name', key: 'name' },
+    { title: '分类', dataIndex: 'category', key: 'category', width: 100 },
+    { title: '库存数量', dataIndex: 'stock_quantity', key: 'stock_quantity', width: 100, render: (v: number, r: any) => `${v} ${r.unit}` },
+    { title: '单价', dataIndex: 'unit_price', key: 'unit_price', width: 100, render: (v: number) => v ? `¥${v.toLocaleString()}` : '-' },
+    { title: '安全库存点', dataIndex: 'reorder_point', key: 'reorder_point', width: 100 },
+    { title: '产地', dataIndex: 'origin', key: 'origin', width: 120 },
+    { title: '状态', key: 'status', width: 80, render: (_: any, r: any) => {
+      const qty = r.stock_quantity || 0
+      const reorder = r.reorder_point || 0
+      const status = qty <= reorder * 0.5 ? '不足' : qty <= reorder ? '预警' : '正常'
+      return <Tag color={statusMap[status]?.color}>{statusMap[status]?.text || status}</Tag>
+    }}
   ]
 
   return (
@@ -52,7 +56,7 @@ const InventoryList: React.FC = () => {
         <Space><Input placeholder="搜索物料名称" prefix={<SearchOutlined />} style={{ width: 160 }} /><Button type="primary">查询</Button><Button>重置</Button></Space>
       </Card>
       <Card bordered={false} size="small">
-        <Table columns={columns} dataSource={inventory} rowKey="inventory_id" loading={loading} pagination={{ total, showSizeChanger: true, showTotal: (t: number) => `共 ${t} 条` }} />
+        <Table columns={columns} dataSource={inventory} rowKey="id" loading={loading} pagination={{ total, showSizeChanger: true, showTotal: (t: number) => `共 ${t} 条` }} />
       </Card>
     </div>
   )

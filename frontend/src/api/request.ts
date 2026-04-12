@@ -11,4 +11,12 @@ api.interceptors.response.use(
   (error) => Promise.reject(error)
 )
 
-export default api
+// Type-safe wrapper: interceptor unwraps AxiosResponse, so .get/.post return data directly
+const typedApi = {
+  get: <T = any>(url: string, config?: any): Promise<T> => api.get(url, config),
+  post: <T = any>(url: string, data?: any, config?: any): Promise<T> => api.post(url, data, config),
+  put: <T = any>(url: string, data?: any, config?: any): Promise<T> => api.put(url, data, config),
+  delete: <T = any>(url: string, config?: any): Promise<T> => api.delete(url, config)
+}
+
+export default typedApi

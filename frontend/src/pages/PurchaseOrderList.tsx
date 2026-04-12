@@ -18,9 +18,9 @@ const PurchaseOrderList: React.FC = () => {
   const loadOrders = async () => {
     setLoading(true)
     try {
-      const res = await getOrders({ page, page_size: 20 })
-      setOrders(res.items)
-      setTotal(res.total)
+      const res: any = await getOrders({ page, page_size: 20 })
+      const data = Array.isArray(res) ? res : []
+      setOrders(data); setTotal(data.length)
     } finally { setLoading(false) }
   }
 
@@ -31,14 +31,14 @@ const PurchaseOrderList: React.FC = () => {
   }
 
   const columns = [
-    { title: '订单编号', dataIndex: 'order_number', key: 'order_number', width: 180 },
+    { title: '订单编号', dataIndex: 'order_no', key: 'order_no', width: 180 },
     { title: '计划类型', dataIndex: 'plan_type', key: 'plan_type', width: 100 },
     { title: '订单金额', dataIndex: 'total_amount', key: 'total_amount', width: 120, render: (v: number) => `¥${v?.toLocaleString() || 0}` },
     { title: '预计交货日期', dataIndex: 'expected_delivery_date', key: 'expected_delivery_date', width: 120 },
     { title: '状态', dataIndex: 'status', key: 'status', width: 100, render: (v: string) => <Tag color={statusMap[v]?.color}>{statusMap[v]?.text || v}</Tag> },
     { title: '创建人', dataIndex: 'created_by', key: 'created_by', width: 100 },
     { title: '创建时间', dataIndex: 'created_at', key: 'created_at', width: 160 },
-    { title: '操作', key: 'action', width: 100, render: (_: any, r: any) => <Button type="link" icon={<EyeOutlined />} onClick={() => navigate(`/orders/${r.order_id}`)}>查看</Button> }
+    { title: '操作', key: 'action', width: 100, render: (_: any, r: any) => <Button type="link" icon={<EyeOutlined />} onClick={() => navigate(`/orders/${r.id}`)}>查看</Button> }
   ]
 
   return (
@@ -56,7 +56,7 @@ const PurchaseOrderList: React.FC = () => {
         <Space><Input placeholder="搜索订单编号" prefix={<SearchOutlined />} style={{ width: 160 }} /><Button type="primary">查询</Button><Button>重置</Button><Button type="primary" icon={<PlusOutlined />}>新建订单</Button></Space>
       </Card>
       <Card bordered={false} size="small">
-        <Table columns={columns} dataSource={orders} rowKey="order_id" loading={loading} pagination={{ current: page, pageSize: 20, total, showSizeChanger: true, showTotal: (t: number) => `共 ${t} 条`, onChange: (p) => setPage(p) }} />
+        <Table columns={columns} dataSource={orders} rowKey="id" loading={loading} pagination={{ current: page, pageSize: 20, total, showSizeChanger: true, showTotal: (t: number) => `共 ${t} 条`, onChange: (p) => setPage(p) }} />
       </Card>
     </div>
   )

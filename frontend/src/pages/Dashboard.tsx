@@ -11,7 +11,14 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     Promise.all([getDashboardMetrics(), getAlerts(), getTodos(), getFulfillmentStatus()]).then(([m, a, t, f]) => {
-      setMetrics(m); setAlerts(a); setTodos(t); setFulfillment(f)
+      setMetrics(m)
+      // alerts API returns { low_stock_materials: [...], low_stock_products: [...] }
+      const alertData: any[] = []
+      if (a?.low_stock_materials) alertData.push(...a.low_stock_materials.map((item: any) => ({ ...item, title: `${item.name} 库存不足`, description: `当前库存 ${item.stock_quantity}，安全库存 ${item.reorder_point}`, level: 'warning', time: '刚刚' })))
+      if (a?.low_stock_products) alertData.push(...a.low_stock_products.map((item: any) => ({ ...item, title: `${item.name} 库存偏低`, description: `当前库存 ${item.stock_quantity}`, level: 'error', time: '刚刚' })))
+      if (alertData.length === 0) alertData.push({ title: '暂无预警', description: '所有物料和产品库存正常', level: 'info' as const, time: '-' })
+      setAlerts(alertData)
+      setTodos(t); setFulfillment(f)
     })
   }, [])
 

@@ -16,7 +16,8 @@ const InspectionList: React.FC = () => {
     setLoading(true)
     try {
       const [i, s] = await Promise.all([getInspections({ page: 1, page_size: 20 }), getInspectionStats()])
-      setInspections(i.items); setTotal(i.total); setStats(s)
+      const data = Array.isArray(i) ? i : []
+      setInspections(data); setTotal(data.length); setStats(s)
     } finally { setLoading(false) }
   }
 
@@ -27,15 +28,12 @@ const InspectionList: React.FC = () => {
   }
 
   const columns = [
-    { title: '质检单号', dataIndex: 'inspection_number', key: 'inspection_number', width: 160 },
-    { title: '批次号', dataIndex: 'batch_number', key: 'batch_number', width: 160 },
-    { title: '物料名称', dataIndex: 'material_name', key: 'material_name' },
-    { title: '质检类型', dataIndex: 'inspection_type', key: 'inspection_type', width: 100 },
-    { title: '抽样数量', dataIndex: 'sample_size', key: 'sample_size', width: 80 },
-    { title: '主检员', dataIndex: 'inspector', key: 'inspector', width: 100 },
-    { title: '判定结果', key: 'judgment', width: 100, render: (_: any, r: any) => getTag(r.status, r.judgment_result) },
-    { title: '状态', dataIndex: 'status', key: 'status', width: 80 },
-    { title: '创建时间', dataIndex: 'create_time', key: 'create_time', width: 160 },
+    { title: '批次号', dataIndex: 'batch_no', key: 'batch_no', width: 160 },
+    { title: '产量', dataIndex: 'quantity', key: 'quantity', width: 100 },
+    { title: '合格数量', dataIndex: 'qualified_quantity', key: 'qualified_quantity', width: 100 },
+    { title: '合格率', dataIndex: 'quality_rate', key: 'quality_rate', width: 80, render: (v: number) => `${v}%` },
+    { title: '操作员', dataIndex: 'operator', key: 'operator', width: 100 },
+    { title: '生产日期', dataIndex: 'production_date', key: 'production_date', width: 160 },
     { title: '操作', key: 'action', width: 100, render: () => <Button type="link" icon={<EyeOutlined />}>查看</Button> }
   ]
 
@@ -52,7 +50,7 @@ const InspectionList: React.FC = () => {
         <Space><Input placeholder="搜索质检单号" prefix={<SearchOutlined />} style={{ width: 160 }} /><Input placeholder="批次号" style={{ width: 140 }} /><RangePicker style={{ width: 280 }} /><Button type="primary">查询</Button><Button>重置</Button></Space>
       </Card>
       <Card bordered={false} size="small">
-        <Table columns={columns} dataSource={inspections} rowKey="inspection_id" loading={loading} pagination={{ total, showSizeChanger: true, showTotal: (t: number) => `共 ${t} 条` }} />
+        <Table columns={columns} dataSource={inspections} rowKey="id" loading={loading} pagination={{ total, showSizeChanger: true, showTotal: (t: number) => `共 ${t} 条` }} />
       </Card>
     </div>
   )

@@ -12,8 +12,9 @@ const ReceiptList: React.FC = () => {
   const loadData = async () => {
     setLoading(true)
     try {
-      const res = await getWaybills({ page: 1, page_size: 20 })
-      setWaybills(res.items); setTotal(res.total)
+      const res: any = await getWaybills({ page: 1, page_size: 20 })
+      const data = Array.isArray(res) ? res : []
+      setWaybills(data); setTotal(data.length)
     } finally { setLoading(false) }
   }
 
