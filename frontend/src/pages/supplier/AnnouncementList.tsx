@@ -3,7 +3,7 @@ import { List, Card, Tag, Badge, Modal, Button, Typography, Space, Empty } from 
 import { 
   BellOutlined, 
   FileTextOutlined, 
-  PolicyOutlined, 
+  LockOutlined, 
   ReadOutlined, 
   PushpinOutlined,
   EyeOutlined 
@@ -15,7 +15,7 @@ const { Text, Title } = Typography
 // 类型映射
 const typeConfig: Record<string, { icon: React.ReactNode; label: string; color: string }> = {
   announcement: { icon: <BellOutlined />, label: '公告', color: 'blue' },
-  policy: { icon: <PolicyOutlined />, label: '政策', color: 'purple' },
+  policy: { icon: <LockOutlined />, label: '政策', color: 'purple' },
   guide: { icon: <FileTextOutlined />, label: '操作指引', color: 'green' },
 }
 
@@ -41,12 +41,12 @@ const SupplierAnnouncementList: React.FC = () => {
   const loadData = async (announcementType?: string) => {
     setLoading(true)
     try {
-      const params: any = {}
+      const params: Record<string, string> = {}
       if (announcementType && announcementType !== 'all') {
         params.announcement_type = announcementType
       }
       const res = await getAnnouncements(params)
-      setData(res.data.items)
+      setData(res.items)
     } catch (err) {
       console.error('加载公告失败', err)
     } finally {
@@ -59,7 +59,7 @@ const SupplierAnnouncementList: React.FC = () => {
     try {
       const res = await getAnnouncementTypesSummary()
       const summary: Record<string, number> = { all: 0 }
-      res.data.forEach((item) => {
+      res.forEach((item: { type: string; count: number }) => {
         summary[item.type] = item.count
         summary.all += item.count
       })

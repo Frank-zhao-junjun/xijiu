@@ -35,12 +35,12 @@ const BuyerAnnouncementList: React.FC = () => {
   const loadData = async (announcementType?: string) => {
     setLoading(true)
     try {
-      const params: any = {}
+      const params: Record<string, string> = {}
       if (announcementType && announcementType !== 'all') {
         params.announcement_type = announcementType
       }
       const res = await getAnnouncements(params)
-      setData(res.data.items)
+      setData(res.items)
     } catch (err) {
       message.error('加载公告列表失败')
     } finally {
@@ -53,7 +53,7 @@ const BuyerAnnouncementList: React.FC = () => {
     try {
       const res = await getAnnouncementTypesSummary()
       const summary: Record<string, number> = { all: 0 }
-      res.data.forEach((item) => {
+      res.forEach((item: { type: string; count: number }) => {
         summary[item.type] = item.count
         summary.all += item.count
       })
