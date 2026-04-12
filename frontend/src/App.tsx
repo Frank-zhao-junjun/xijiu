@@ -12,9 +12,11 @@ import ContractList from './pages/buyer/ContractList'
 import BuyerAnnouncementList from './pages/buyer/AnnouncementList'
 import PurchaseOrderList from './pages/PurchaseOrderList'
 import SupplierList from './pages/SupplierList'
+import WaybillList from './pages/WaybillList'
 import ReceiptList from './pages/ReceiptList'
 import InventoryList from './pages/InventoryList'
 import InspectionList from './pages/InspectionList'
+import FinancialList from './pages/FinancialList'
 
 // 供应商端页面
 import SupplierHome from './pages/supplier/SupplierHome'
@@ -43,9 +45,11 @@ function App() {
               <Route path="contracts" element={<ContractList />} />
               <Route path="orders" element={<PurchaseOrderList />} />
               <Route path="suppliers" element={<SupplierList />} />
+              <Route path="waybills" element={<WaybillList />} />
               <Route path="receipts" element={<ReceiptList />} />
               <Route path="inventory" element={<InventoryList />} />
               <Route path="inspections" element={<InspectionList />} />
+              <Route path="financial" element={<FinancialList />} />
               <Route path="announcements" element={<BuyerAnnouncementList />} />
             </Route>
 

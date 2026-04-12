@@ -658,23 +658,47 @@ class ASN(Base):
 
 
 class Receipt(Base):
-    """收货单"""
+    """入库单"""
     __tablename__ = "receipts"
 
     id = Column(Integer, primary_key=True, index=True)
     receipt_no = Column(String(50), unique=True, nullable=False)
     asn_id = Column(Integer, ForeignKey("asn.id"), nullable=True)
-    po_id = Column(Integer, ForeignKey("purchase_orders.id"), nullable=False)
+    warehouse_id = Column(Integer, ForeignKey("warehouses.id"), nullable=False)
     supplier_id = Column(Integer, ForeignKey("suppliers.id"), nullable=False)
-    warehouse_id = Column(Integer, ForeignKey("warehouses.id"), nullable=True)
-    actual_arrival_date = Column(DateTime, nullable=True)
+    purchase_order_id = Column(Integer, ForeignKey("purchase_orders.id"), nullable=True)
+    status = Column(String(20), default="pending")  # pending/qualified/unqualified
+    total_quantity = Column(Float, default=0)
+    qualified_quantity = Column(Float, default=0)
+    unqualified_quantity = Column(Float, default=0)
     inspector = Column(String(100))
-    inspection_result = Column(String(20))    # qualified/unqualified/special_approved
-    inspection_notes = Column(Text)
-    items_data = Column(Text, default="[]")   # 收货明细含验收结果
+    inspected_at = Column(DateTime, nullable=True)
+    remarks = Column(Text)
     created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     supplier = relationship("Supplier")
+    warehouse = relationship("Warehouse")
+    items_rel = relationship("ReceiptItem", back_populates="receipt")
+
+
+class ReceiptItem(Base):
+    """入库单明细"""
+    __tablename__ = "receipt_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    receipt_id = Column(Integer, ForeignKey("receipts.id"), nullable=False)
+    material_id = Column(Integer, ForeignKey("materials.id"), nullable=True)
+    material_name = Column(String(200))
+    quantity = Column(Float, default=0)
+    unit = Column(String(20))
+    batch_no = Column(String(50))
+    production_date = Column(DateTime, nullable=True)
+    quality_result = Column(String(20), default="qualified")  # qualified/unqualified
+    warehouse_location = Column(String(100))
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    receipt = relationship("Receipt", back_populates="items_rel")
 
 
 # ==================== Phase 4: 财务结算模型 ====================
@@ -694,15 +718,20 @@ class SettlementStatement(Base):
     statement_no = Column(String(50), unique=True, nullable=False)
     supplier_id = Column(Integer, ForeignKey("suppliers.id"), nullable=False)
     settlement_period = Column(String(50), nullable=False)  # 结算期间
+    period_start = Column(DateTime, nullable=True)  # 结算开始日期
+    period_end = Column(DateTime, nullable=True)  # 结算结束日期
     receipt_ids = Column(Text, default="[]")   # 关联收货单ID列表
     total_amount = Column(Float, nullable=False)
     adjusted_amount = Column(Float, nullable=True)  # 调整后金额
-    status = Column(SQLEnum(SettlementStatus), default=SettlementStatus.PENDING_AUDIT)
+    paid_amount = Column(Float, default=0)  # 已付金额
+    status = Column(String(20), default="draft")  # draft/pending_audit/confirmed/paid/closed
     dispute_reason = Column(Text)
+    remarks = Column(Text)  # 备注
     audited_by = Column(Integer, ForeignKey("users.id"), nullable=True)
     audited_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    confirmed_by = Column(String(100), nullable=True)  # 确认人（供应商名称）
     confirmed_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
     supplier = relationship("Supplier")
 
@@ -732,7 +761,7 @@ class Invoice(Base):
     match_status = Column(String(20), default="pending")  # pending/matched/amount_diff/quantity_diff/unmatched
     match_details = Column(Text, default="{}")
     # 审批
-    status = Column(SQLEnum(InvoiceStatus), default=InvoiceStatus.CREATED)
+    status = Column(String(20), default="created")  # created/pending_approval/approved/rejected/verified/issued
     approved_by = Column(Integer, ForeignKey("users.id"), nullable=True)
     approved_at = Column(DateTime, nullable=True)
     rejection_reason = Column(String(500))
@@ -761,8 +790,9 @@ class Payment(Base):
     payment_method = Column(String(50))   # bank_transfer/credit/other
     expected_date = Column(DateTime, nullable=True)
     actual_date = Column(DateTime, nullable=True)
-    status = Column(SQLEnum(PaymentStatus), default=PaymentStatus.APPLIED)
+    status = Column(String(20), default="applied")  # applied/finance_approved/paid/received
     pre_payment = Column(Integer, default=0)  # 是否预付款
+    remarks = Column(Text)  # 备注
     created_by = Column(Integer, ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

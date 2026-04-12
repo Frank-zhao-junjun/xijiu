@@ -62,6 +62,14 @@ export default defineConfig({
       '/announcements': {
         target: 'http://localhost:8000',
         changeOrigin: true
+      },
+      '/logistics': {
+        target: 'http://localhost:8000',
+        changeOrigin: true
+      },
+      '/financial': {
+        target: 'http://localhost:8000',
+        changeOrigin: true
       }
     }
   }

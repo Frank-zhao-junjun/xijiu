@@ -5,7 +5,7 @@ import {
   DashboardOutlined, FileTextOutlined, TeamOutlined, ShoppingOutlined,
   InboxOutlined, AppstoreOutlined, AuditOutlined, SwapOutlined,
   TrophyOutlined, ThunderboltOutlined, ContainerOutlined, MessageOutlined,
-  BellOutlined
+  BellOutlined, CarOutlined, DollarOutlined
 } from '@ant-design/icons'
 
 const { Sider, Content, Header } = AntLayout
@@ -21,10 +21,14 @@ const buyerItems = [
     { key: '/buyer/orders', icon: <FileTextOutlined />, label: '采购订单' },
     { key: '/buyer/suppliers', icon: <TeamOutlined />, label: '供应商管理' },
   ]},
-  { type: 'group' as const, label: '仓储管理', children: [
+  { type: 'group' as const, label: '仓储物流', children: [
+    { key: '/buyer/waybills', icon: <CarOutlined />, label: '运单管理' },
     { key: '/buyer/receipts', icon: <InboxOutlined />, label: '入库单' },
     { key: '/buyer/inventory', icon: <AppstoreOutlined />, label: '库存查询' },
     { key: '/buyer/inspections', icon: <AuditOutlined />, label: '质检单' },
+  ]},
+  { type: 'group' as const, label: '财务管理', children: [
+    { key: '/buyer/financial', icon: <DollarOutlined />, label: '结算与付款' },
   ]},
   { type: 'group' as const, label: '系统设置', children: [
     { key: '/buyer/announcements', icon: <BellOutlined />, label: '公告管理' },

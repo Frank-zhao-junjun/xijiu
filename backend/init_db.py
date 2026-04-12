@@ -3,7 +3,7 @@ import asyncio
 import json
 from datetime import datetime, timedelta
 from app.core.database import async_engine, Base, AsyncSessionLocal
-from app.models.supply_chain import (Supplier, Material, Product, PurchaseOrder, PurchaseOrderItem, SalesOrder, ProductionRecord, MaterialUsage, Warehouse, ShipmentNote, ShipmentNoteItem, SupplierInvitation, SupplierRegistration, SupplierCertification, SupplierAlert, QualificationProject, QualificationSubmission, SourcingProject, SourcingInvitation, SourcingBid, SourcingAward, ContractTemplate, Contract, ContractComment, PurchaseForecast, ForecastResponse, DeliverySchedule, ASN, Receipt, SettlementStatement, Invoice, Payment, User, Announcement, AnnouncementRead, AnnouncementType)
+from app.models.supply_chain import (Supplier, Material, Product, PurchaseOrder, PurchaseOrderItem, SalesOrder, ProductionRecord, MaterialUsage, Warehouse, ShipmentNote, ShipmentNoteItem, SupplierInvitation, SupplierRegistration, SupplierCertification, SupplierAlert, QualificationProject, QualificationSubmission, SourcingProject, SourcingInvitation, SourcingBid, SourcingAward, ContractTemplate, Contract, ContractComment, PurchaseForecast, ForecastResponse, DeliverySchedule, ASN, Receipt, ReceiptItem, SettlementStatement, Invoice, Payment, User, Announcement, AnnouncementRead, AnnouncementType)
 
 async def init_database():
     print("Creating database tables...")
@@ -247,6 +247,147 @@ async def seed_demo_data():
             ),
         ]
         session.add_all(announcements)
+
+        # ===== 入库单种子数据 =====
+        from app.models.supply_chain import Receipt, ReceiptItem
+        
+        receipts = [
+            Receipt(
+                receipt_no="RC20260410001",
+                warehouse_id=1,
+                supplier_id=suppliers[0].id,
+                purchase_order_id=po1.id,
+                status="qualified",
+                total_quantity=10.0,
+                qualified_quantity=9.8,
+                unqualified_quantity=0.2,
+                inspector="陈仓管",
+                inspected_at=datetime.now() - timedelta(days=5),
+                remarks="轻微杂质，已扣除"
+            ),
+            Receipt(
+                receipt_no="RC20260408001",
+                warehouse_id=1,
+                supplier_id=suppliers[1].id,
+                status="qualified",
+                total_quantity=20.0,
+                qualified_quantity=20.0,
+                unqualified_quantity=0.0,
+                inspector="陈仓管",
+                inspected_at=datetime.now() - timedelta(days=7),
+            ),
+        ]
+        session.add_all(receipts)
+        await session.flush()
+        
+        # 入库单明细
+        receipt_items = [
+            ReceiptItem(receipt_id=receipts[0].id, material_id=materials_list[0].id, material_name="红缨子糯高粱", quantity=10.0, unit="吨", batch_no="GN-2026-04-001", quality_result="qualified", warehouse_location="A区-01-01"),
+            ReceiptItem(receipt_id=receipts[1].id, material_id=materials_list[1].id, material_name="优质小麦", quantity=20.0, unit="吨", batch_no="XM-2026-04-001", quality_result="qualified", warehouse_location="A区-01-02"),
+        ]
+        session.add_all(receipt_items)
+
+        # ===== 结算单种子数据 =====
+        from app.models.supply_chain import SettlementStatement
+        
+        statements = [
+            SettlementStatement(
+                statement_no="SS20260401001",
+                supplier_id=suppliers[0].id,
+                settlement_period="2026年3月",
+                period_start=datetime(2026, 3, 1),
+                period_end=datetime(2026, 3, 31),
+                total_amount=85000.0,
+                status="paid",
+                paid_amount=85000.0,
+                confirmed_at=datetime(2026, 4, 5),
+                confirmed_by="贵州红缨子高粱种植基地"
+            ),
+            SettlementStatement(
+                statement_no="SS20260402001",
+                supplier_id=suppliers[1].id,
+                settlement_period="2026年3月",
+                period_start=datetime(2026, 3, 1),
+                period_end=datetime(2026, 3, 31),
+                total_amount=64000.0,
+                status="confirmed",
+                confirmed_at=datetime.now() - timedelta(days=3),
+                confirmed_by="四川泸州老窖原料供应商"
+            ),
+            SettlementStatement(
+                statement_no="SS20260403001",
+                supplier_id=suppliers[2].id,
+                settlement_period="2026年4月上旬",
+                period_start=datetime(2026, 4, 1),
+                period_end=datetime(2026, 4, 15),
+                total_amount=36000.0,
+                status="draft",
+            ),
+        ]
+        session.add_all(statements)
+        await session.flush()
+
+        # ===== 发票种子数据 =====
+        from app.models.supply_chain import Invoice
+        
+        invoices = [
+            Invoice(
+                invoice_no="INV20260405001",
+                statement_id=statements[0].id,
+                supplier_id=suppliers[0].id,
+                amount=72307.07,
+                tax_amount=12692.93,
+                invoice_type="VAT_SPECIAL",
+                invoice_date=datetime(2026, 4, 5),
+                status="verified"
+            ),
+            Invoice(
+                invoice_no="INV20260408001",
+                supplier_id=suppliers[1].id,
+                amount=54428.22,
+                tax_amount=9571.78,
+                invoice_type="VAT_SPECIAL",
+                invoice_date=datetime.now() - timedelta(days=2),
+                status="issued"
+            ),
+        ]
+        session.add_all(invoices)
+
+        # ===== 付款记录种子数据 =====
+        from app.models.supply_chain import Payment
+        
+        payments = [
+            Payment(
+                payment_no="PAY20260406001",
+                invoice_id=invoices[0].id,
+                statement_id=statements[0].id,
+                supplier_id=suppliers[0].id,
+                amount=85000.0,
+                payment_method="bank_transfer",
+                expected_date=datetime(2026, 4, 15),
+                actual_date=datetime(2026, 4, 10),
+                status="paid"
+            ),
+            Payment(
+                payment_no="PAY20260412001",
+                supplier_id=suppliers[1].id,
+                amount=30000.0,
+                payment_method="bank_transfer",
+                expected_date=datetime(2026, 5, 1),
+                status="approved",
+                remarks="预付款"
+            ),
+            Payment(
+                payment_no="PAY20260412002",
+                supplier_id=suppliers[2].id,
+                amount=36000.0,
+                payment_method="bank_transfer",
+                expected_date=datetime(2026, 5, 15),
+                status="applied",
+                remarks="4月货款"
+            ),
+        ]
+        session.add_all(payments)
 
         await session.commit()
         print("✅ Demo data added successfully!")
