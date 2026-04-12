@@ -10,4 +10,4 @@ run = ["bash", "-c", "cd /workspace/projects/backend && python3 init_db.py && uv
 
 [deploy]
 build = ["pnpm", "run", "build"]
-run = ["npx", "serve", "-l", "5000"]
+run = ["node", "server.mjs"]
