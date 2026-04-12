@@ -1,0 +1,54 @@
+# 经验日志 (Progress Log)
+# 每轮迭代自动追加，作为下一轮 AI 的"记忆"
+
+## 项目规范
+- 技术栈: 原生 HTML/CSS/JS + ECharts 5.5
+- 设计风格: 深色科技风 (#0a0e1a 背景, Cyan #38bdf8 主色)
+- 文件位置: assets/js/whatif/ 目录
+
+## 已知命令
+- 项目使用静态文件，无需构建步骤
+- 验证方式: 文件存在性检查 + 代码语法检查
+
+## 代码规范
+- 使用 ES6+ 语法
+- 类名采用 PascalCase
+- 方法名采用 camelCase
+- 注释说明非 obvious 的逻辑
+
+## 踩过的坑
+# (将在每轮迭代后自动追加)
+
+=== Iteration 1 (US-001) ===
+- Discovered: ES Module 语法 (export default) 在 Node.js 中需要 --input-type=module 才能直接执行验证
+- Discovered: 使用 Map 数据结构管理场景注册表比 Object 更安全（自动去重、有序遍历）
+- Pattern: 场景参数定义采用统一 schema { key, label, type, defaultValue, min, max, step, unit }，便于 UI 动态渲染
+- Pattern: 内置场景在构造函数中自动注册，外部可通过 register() 扩展，符合开放-封闭原则
+- Gotcha: Node.js 验证 ES Module 时需用 node --input-type=module -e "import ..." 形式
+
+=== Iteration 2 (US-002) ===
+- Discovered: 每个场景的计算逻辑差异大，用 switch-case 分发到私有方法更清晰
+- Discovered: 敏感度分析应作为后处理步骤，与业务计算解耦
+- Pattern: 结果对象统一结构 { metrics[], summary{}, sensitivity{} } 便于 UI 层统一渲染
+- Pattern: 使用 _num() 工具方法安全提取参数值，避免 NaN 传播
+- Pattern: _sanitizeParams 过滤空值，防止 null/undefined/'' 进入计算链
+- Gotcha: 百分比变化计算时分母可能为0（如质量隐性成本基准为0），需 Math.max(1, denominator) 保护
+- Gotcha: 批量采购场景中折扣率输入是百分比(5)，内部计算需除以100转小数(0.05)
+
+=== Iteration 3 (US-003) ===
+- Discovered: Intl.NumberFormat 在 Node.js 中完全可用，无需 polyfill
+- Discovered: formatResult() 是核心方法，将 SimulationEngine 的原始结果转换为 UI 层可直接消费的结构
+- Pattern: 颜色编码用 CSS 十六进制值（#22c55e/#ef4444）而非类名，便于直接用于 style 属性
+- Pattern: ECharts 数据转换方法(toBarChart/toLineChart/toRadarChart)与格式化器放在一起，保持数据转换逻辑集中
+- Pattern: _generateHeadline() 生成一行摘要文本，适合在面板顶部快速展示
+- Gotcha: Unicode 箭头字符（▲▼→）在 shell 脚本中作为三元运算符操作数时可能引起解析问题，测试时需注意转义
+
+=== Iteration 4 (US-004) ===
+- Discovered: 面板组件是最大的文件(26KB)，包含 HTML/CSS/JS 三合一，职责较重但符合原生项目特点
+- Discovered: _buildHTML() + _getStyleTag() 模式将样式内联到组件中，避免外部 CSS 依赖
+- Pattern: 使用 data-param 属性标记表单字段，_collectParamValues() 统一收集所有参数值
+- Pattern: 图表类型通过 data-chart 属性在 Tab 按钮上声明，事件委托统一处理切换
+- Pattern: ECharts 实例存储为 _chartInstance，切换图表时先 dispose() 再 init()，防止内存泄漏
+- Pattern: window 全局对象用于跨模块访问 registry/engine/formatter（简单项目的实用做法）
+- Gotcha: Node.js 环境没有 window 对象，面板代码中引用 window.scenarioRegistry 会在服务端报错
+- Gotcha: _buildBarOption() 中从 formatted 字符串提取数值不够精确，理想情况应保留原始数值

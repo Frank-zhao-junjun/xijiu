@@ -1,6 +1,6 @@
 """白酒供应链数据模型"""
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Enum as SQLEnum, Text
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 import enum
@@ -33,6 +33,15 @@ class Supplier(Base):
     address = Column(String(500))
     status = Column(SQLEnum(SupplierStatus), default=SupplierStatus.ACTIVE)
     rating = Column(Float, default=5.0)
+    # 供应商扩展字段（Phase 1 协同）
+    origin_type = Column(String(50), default="一般产区")  # 核心产区/一般产区
+    main_category = Column(String(100))  # 主营品类: 粮食类/酵母类/辅料类
+    annual_capacity = Column(Float, default=0.0)  # 年供货能力(吨)
+    cooperation_years = Column(Integer, default=0)  # 合作年限
+    quality_score = Column(Float, default=5.0)  # 历史质量评分
+    delivery_score = Column(Float, default=5.0)  # 交期评分
+    service_score = Column(Float, default=5.0)  # 服务评分
+    qualifications = Column(Text, default="[]")  # 资质证书 JSON 数组
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     materials = relationship("Material", back_populates="supplier")
@@ -81,6 +90,10 @@ class PurchaseOrder(Base):
     expected_delivery_date = Column(DateTime)
     actual_delivery_date = Column(DateTime)
     notes = Column(String(500))
+    # 供应商协同字段（Phase 1）
+    supplier_confirmed_at = Column(DateTime)  # 供应商确认时间
+    supplier_rejection_reason = Column(String(500))  # 供应商拒绝原因
+    created_by = Column(String(50), default="系统")  # 创建人
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     supplier = relationship("Supplier", back_populates="orders")
@@ -149,3 +162,60 @@ class Warehouse(Base):
     manager = Column(String(100))
     status = Column(String(50), default="active")
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+# ==================== Phase 1: 协同模型 ====================
+
+class ShipmentStatus(str, enum.Enum):
+    DRAFT = "draft"
+    SUBMITTED = "submitted"
+    IN_TRANSIT = "in_transit"
+    ARRIVED = "arrived"
+    RECEIVED = "received"
+    CANCELLED = "cancelled"
+
+
+class ShipmentNote(Base):
+    """送货单(ASN) - 供应商创建的发货通知"""
+    __tablename__ = "shipment_notes"
+    id = Column(Integer, primary_key=True, index=True)
+    shipment_no = Column(String(50), unique=True, nullable=False, index=True)
+    purchase_order_id = Column(Integer, ForeignKey("purchase_orders.id"), nullable=False)
+    supplier_id = Column(Integer, ForeignKey("suppliers.id"), nullable=False)
+    status = Column(SQLEnum(ShipmentStatus), default=ShipmentStatus.DRAFT)
+    carrier_name = Column(String(100))
+    tracking_no = Column(String(100))
+    vehicle_no = Column(String(50))
+    driver_name = Column(String(50))
+    driver_phone = Column(String(50))
+    expected_arrival = Column(DateTime)
+    actual_arrival = Column(DateTime)
+    shipping_address = Column(String(500))
+    receiving_warehouse = Column(String(200))
+    notes = Column(String(500))
+    total_quantity = Column(Float, default=0.0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    purchase_order = relationship("PurchaseOrder")
+    supplier = relationship("Supplier")
+    items = relationship("ShipmentNoteItem", back_populates="shipment_note", cascade="all, delete-orphan")
+
+
+class ShipmentNoteItem(Base):
+    """送货单明细 - 含批次追溯信息"""
+    __tablename__ = "shipment_note_items"
+    id = Column(Integer, primary_key=True, index=True)
+    shipment_note_id = Column(Integer, ForeignKey("shipment_notes.id"), nullable=False)
+    material_id = Column(Integer, ForeignKey("materials.id"), nullable=False)
+    material_name = Column(String(200))
+    quantity = Column(Float, nullable=False)
+    unit = Column(String(50), default="吨")
+    batch_no = Column(String(50))
+    production_date = Column(DateTime)
+    origin_location = Column(String(200))
+    quality_grade = Column(String(50))
+    package_count = Column(Integer, default=1)
+    notes = Column(String(300))
+    created_at = Column(DateTime, default=datetime.utcnow)
+    shipment_note = relationship("ShipmentNote", back_populates="items")
+    material = relationship("Material")

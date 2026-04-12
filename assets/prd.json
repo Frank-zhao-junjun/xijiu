@@ -1,0 +1,104 @@
+{
+  "projectName": "采购分析驾驶舱 - WhatIf 模拟器",
+  "branchName": "feature/whatif-simulator",
+  "version": "1.0.0",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "创建场景注册表基础结构",
+      "description": "实现 ScenarioRegistry 类，管理所有 WhatIf 场景的定义和元数据",
+      "acceptanceCriteria": [
+        "assets/js/whatif/scenario-registry.js 文件存在",
+        "支持 register() 方法注册场景",
+        "支持 getAll() 获取所有场景",
+        "支持 getById() 按ID获取场景",
+        "包含至少3个内置场景定义"
+      ],
+      "priority": 1,
+      "passes": true,
+      "dependsOn": [],
+      "notes": "场景包含：价格变动、供应商切换、批量采购"
+    },
+    {
+      "id": "US-002",
+      "title": "实现模拟计算引擎",
+      "description": "创建 SimulationEngine 类，处理 WhatIf 场景的数值计算",
+      "acceptanceCriteria": [
+        "assets/js/whatif/simulation-engine.js 文件存在",
+        "支持 calculate() 执行场景计算",
+        "返回标准化的结果对象",
+        "包含敏感值检测机制",
+        "处理边界情况和异常输入"
+      ],
+      "priority": 2,
+      "passes": true,
+      "dependsOn": ["US-001"],
+      "notes": "计算结果需包含：原始值、模拟值、差额、百分比变化"
+    },
+    {
+      "id": "US-003",
+      "title": "创建结果格式化器",
+      "description": "实现 Formatter 模块，将模拟结果格式化为可读的文本/图表数据",
+      "acceptanceCriteria": [
+        "assets/js/whatif/formatter.js 文件存在",
+        "货币格式化保留2位小数",
+        "百分比格式化带正负号",
+        "数值颜色编码：正绿色/负红色/零灰色",
+        "支持趋势箭头（▲▼）"
+      ],
+      "priority": 3,
+      "passes": true,
+      "dependsOn": ["US-002"],
+      "notes": "使用 Intl.NumberFormat 进行本地化"
+    },
+    {
+      "id": "US-004",
+      "title": "实现 WhatIf 面板 UI",
+      "description": "创建交互式面板，支持场景选择、参数调整和结果展示",
+      "acceptanceCriteria": [
+        "assets/js/whatif/whatif-panel.js 文件存在",
+        "场景选择下拉菜单",
+        "动态参数输入表单",
+        "结果展示区域",
+        "与 ECharts 图表联动"
+      ],
+      "priority": 4,
+      "passes": true,
+      "dependsOn": ["US-003"],
+      "notes": "UI风格与现有深色科技风一致，使用Cyan/Gold配色"
+    },
+    {
+      "id": "US-005",
+      "title": "创建 AI 解释器模块",
+      "description": "实现 AIExplainer，将模拟结果转换为业务语言解释",
+      "acceptanceCriteria": [
+        "assets/js/whatif/explainers/ai-explainer.js 文件存在",
+        "生成自然语言摘要",
+        "识别关键洞察点",
+        "提供行动建议",
+        "支持模板变量替换"
+      ],
+      "priority": 5,
+      "passes": true,
+      "dependsOn": ["US-004"],
+      "notes": "模板变量系统已实现，支持{{var}}语法和3种场景模板"
+      "notes": "解释文本要专业、简洁，适合采购总监阅读"
+    },
+    {
+      "id": "US-006",
+      "title": "集成到主仪表板",
+      "description": "将 WhatIf 面板集成到 index.html 主页面",
+      "acceptanceCriteria": [
+        "index.html 包含 WhatIf 模块入口",
+        "支持 Tab 切换打开/关闭面板",
+        "响应式布局适配",
+        "与其他图表联动",
+        "整体视觉风格一致"
+      ],
+      "priority": 6,
+      "passes": false,
+      "dependsOn": ["US-005"],
+      "notes": "放置在 Tab 1（降本分析）下方作为子模块"
+    }
+  ]
+}
