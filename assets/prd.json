@@ -1,104 +1,590 @@
 {
-  "projectName": "采购分析驾驶舱 - WhatIf 模拟器",
-  "branchName": "feature/whatif-simulator",
+  "projectName": "白酒供应链协同平台 - 供应商全链路协同管理",
+  "branchName": "feature/supplier-collaboration",
   "version": "1.0.0",
+  "description": "面向白酒企业的供应商全链路数字化协同系统，覆盖「供应商准入 → 寻源合同 → 订单执行 → 财务结算」四大阶段，实现采购方与供应商的端到端在线协同。",
+  "phases": [
+    {
+      "name": "Phase 1: 供应商准入与主数据协同",
+      "description": "确保引入合格、可信的供应商，并维护其主数据",
+      "priority": 1
+    },
+    {
+      "name": "Phase 2: 寻源与合同协同",
+      "description": "完成供应商选择与法律关系的建立",
+      "priority": 2
+    },
+    {
+      "name": "Phase 3: 预测与订单执行协同",
+      "description": "日常供应协同的核心，实现信息拉通与过程可视化",
+      "priority": 3
+    },
+    {
+      "name": "Phase 4: 财务结算协同",
+      "description": "实现交易闭环，提升财务效率与透明度",
+      "priority": 4
+    }
+  ],
   "userStories": [
     {
-      "id": "US-001",
-      "title": "创建场景注册表基础结构",
-      "description": "实现 ScenarioRegistry 类，管理所有 WhatIf 场景的定义和元数据",
+      "id": "US-101",
+      "title": "供应商注册邀请",
+      "description": "采购方可主动向目标供应商发送注册邀请链接，供应商凭邀请码进入注册页面",
       "acceptanceCriteria": [
-        "assets/js/whatif/scenario-registry.js 文件存在",
-        "支持 register() 方法注册场景",
-        "支持 getAll() 获取所有场景",
-        "支持 getById() 按ID获取场景",
-        "包含至少3个内置场景定义"
+        "POST /api/supplier-portal/invitations 创建邀请记录，生成唯一邀请码",
+        "GET /api/supplier-portal/invitations/{code}/validate 验证邀请码有效性",
+        "返回邀请人企业名称、被邀请供应商预填信息",
+        "邀请码有效期7天，过期自动失效",
+        "已使用过的邀请码不可重复使用"
       ],
       "priority": 1,
       "passes": true,
       "dependsOn": [],
-      "notes": "场景包含：价格变动、供应商切换、批量采购"
+      "phase": 1,
+      "notes": "邀请记录表: invitation_code, supplier_name, email, status, expiry_date, created_by"
     },
     {
-      "id": "US-002",
-      "title": "实现模拟计算引擎",
-      "description": "创建 SimulationEngine 类，处理 WhatIf 场景的数值计算",
+      "id": "US-102",
+      "title": "供应商自助注册",
+      "description": "供应商通过邀请链接或公开门户自助注册，在线填写企业基本信息、营业执照、联系人等",
       "acceptanceCriteria": [
-        "assets/js/whatif/simulation-engine.js 文件存在",
-        "支持 calculate() 执行场景计算",
-        "返回标准化的结果对象",
-        "包含敏感值检测机制",
-        "处理边界情况和异常输入"
+        "GET /api/supplier-portal/invitations/{code}/validate 获取邀请信息预填表单",
+        "POST /api/supplier-portal/register 提交完整注册信息",
+        "必填字段: 企业名称、统一社会信用代码、联系人、联系电话",
+        "可选字段: 营业执照上传、主营产品类目、产能规模",
+        "注册后状态为'待审核'，发送通知给采购方",
+        "同一统一社会信用代码不可重复注册"
       ],
       "priority": 2,
       "passes": true,
-      "dependsOn": ["US-001"],
-      "notes": "计算结果需包含：原始值、模拟值、差额、百分比变化"
+      "dependsOn": ["US-101"],
+      "phase": 1,
+      "notes": "供应商注册信息独立存储，不覆盖主数据表；注册审核通过后写入主数据"
     },
     {
-      "id": "US-003",
-      "title": "创建结果格式化器",
-      "description": "实现 Formatter 模块，将模拟结果格式化为可读的文本/图表数据",
+      "id": "US-103",
+      "title": "供应商注册状态查询",
+      "description": "供应商可实时查询注册审批进度；采购方在线审核并反馈结果",
       "acceptanceCriteria": [
-        "assets/js/whatif/formatter.js 文件存在",
-        "货币格式化保留2位小数",
-        "百分比格式化带正负号",
-        "数值颜色编码：正绿色/负红色/零灰色",
-        "支持趋势箭头（▲▼）"
+        "GET /api/supplier-portal/register/status?unified_credit_code={code} 供应商查询自己的注册状态",
+        "状态枚举: 待审核 / 审核中 / 已通过 / 被驳回",
+        "GET /api/supplier-portal/pending-audit 采购方获取待审核列表",
+        "POST /api/supplier-portal/registrations/{id}/audit 采购方审核注册申请",
+        "审核通过: 状态变为'已通过'，生成供应商portal账号",
+        "审核驳回: 记录驳回原因，供应商可修改后重新提交"
       ],
       "priority": 3,
       "passes": true,
-      "dependsOn": ["US-002"],
-      "notes": "使用 Intl.NumberFormat 进行本地化"
+      "dependsOn": ["US-102"],
+      "phase": 1,
+      "notes": "审核通过后才创建正式的 supplier 记录和 portal 用户"
     },
     {
-      "id": "US-004",
-      "title": "实现 WhatIf 面板 UI",
-      "description": "创建交互式面板，支持场景选择、参数调整和结果展示",
+      "id": "US-104",
+      "title": "供应商资格评审项目创建",
+      "description": "采购方针对特定采购品类或项目，向已注册的潜在供应商发起正式的资格评审项目",
       "acceptanceCriteria": [
-        "assets/js/whatif/whatif-panel.js 文件存在",
-        "场景选择下拉菜单",
-        "动态参数输入表单",
-        "结果展示区域",
-        "与 ECharts 图表联动"
+        "POST /api/qualification/projects 创建资格评审项目",
+        "必填: 项目名称、评审品类、目标供应商ID列表",
+        "可选: 评审截止日期、评审标准模板",
+        "状态枚举: 待供应商响应 / 评审中 / 已完成",
+        "自动通知被邀请供应商",
+        "支持批量邀请多个供应商"
       ],
       "priority": 4,
       "passes": true,
-      "dependsOn": ["US-003"],
-      "notes": "UI风格与现有深色科技风一致，使用Cyan/Gold配色"
+      "dependsOn": ["US-103"],
+      "phase": 1,
+      "notes": "资格评审项目表: project_name, categories[], target_supplier_ids[], deadline, status"
     },
     {
-      "id": "US-005",
-      "title": "创建 AI 解释器模块",
-      "description": "实现 AIExplainer，将模拟结果转换为业务语言解释",
+      "id": "US-105",
+      "title": "供应商在线填写资格问卷",
+      "description": "供应商在线完成详细的资质调查问卷，上传必要的资质证书",
       "acceptanceCriteria": [
-        "assets/js/whatif/explainers/ai-explainer.js 文件存在",
-        "生成自然语言摘要",
-        "识别关键洞察点",
-        "提供行动建议",
-        "支持模板变量替换"
+        "GET /api/qualification/projects/{id}/questionnaire 获取问卷表单",
+        "POST /api/qualification/projects/{id}/submission 供应商提交问卷答案",
+        "支持上传文件: 资质证书(图片/PDF)、财务报表(Excel/PDF)、行业认证扫描件",
+        "文件大小限制: 单文件≤10MB",
+        "提交后状态变为'评审中'，通知采购方",
+        "在采购方驳回前可多次修改提交"
       ],
       "priority": 5,
       "passes": true,
-      "dependsOn": ["US-004"],
-      "notes": "模板变量系统已实现，支持{{var}}语法和3种场景模板"
-      "notes": "解释文本要专业、简洁，适合采购总监阅读"
+      "dependsOn": ["US-104"],
+      "phase": 1,
+      "notes": "问卷字段: 基本信息 / 生产能力 / 质量体系 / 财务状况 / 合作案例 / 自评得分"
     },
     {
-      "id": "US-006",
-      "title": "集成到主仪表板",
-      "description": "将 WhatIf 面板集成到 index.html 主页面",
+      "id": "US-106",
+      "title": "采购方评审资格文件",
+      "description": "采购方组织多部门在线评审文件与问卷结果，可发起在线澄清",
       "acceptanceCriteria": [
-        "index.html 包含 WhatIf 模块入口",
-        "支持 Tab 切换打开/关闭面板",
-        "响应式布局适配",
-        "与其他图表联动",
-        "整体视觉风格一致"
+        "GET /api/qualification/projects/{id}/submissions 获取供应商提交材料列表",
+        "GET /api/qualification/projects/{id}/submissions/{supplier_id} 评审详情",
+        "POST /api/qualification/projects/{id}/submissions/{supplier_id}/review 提交评审意见",
+        "支持多角色评审: 技术评分 / 质量评分 / 财务评分",
+        "支持发起澄清请求，供应商补充材料",
+        "记录完整评审历史"
       ],
       "priority": 6,
+      "passes": true,
+      "dependsOn": ["US-105"],
+      "phase": 1,
+      "notes": "评审维度: 技术能力(40%)、质量体系(30%)、财务状况(30%)"
+    },
+    {
+      "id": "US-107",
+      "title": "资格申请状态协同",
+      "description": "双方实时同步评审状态；通过后供应商被正式纳入合格供应商库",
+      "acceptanceCriteria": [
+        "GET /api/qualification/projects/{id}/status 供应商查询资格申请状态",
+        "状态枚举: 待提交 / 评审中 / 补充材料 / 已通过 / 未通过",
+        "POST /api/qualification/projects/{id}/approve 采购方最终审批通过",
+        "POST /api/qualification/projects/{id}/reject 采购方审批不通过",
+        "通过后: 自动更新 supplier.status='qualified'，纳入合格供应商库",
+        "未通过: 记录原因，供应商可申请重新评审"
+      ],
+      "priority": 7,
+      "passes": true,
+      "dependsOn": ["US-106"],
+      "phase": 1,
+      "notes": "合格供应商库 = supplier.status='qualified' 的供应商"
+    },
+    {
+      "id": "US-108",
+      "title": "供应商资质过期预警与重认证",
+      "description": "系统对供应商的营业执照、资质证书设置有效期，自动预警并触发重认证流程",
+      "acceptanceCriteria": [
+        "供应商注册时录入资质有效期(expiry_date)",
+        "GET /api/suppliers/{id}/certifications 查看供应商所有资质及有效期",
+        "POST /api/suppliers/{id}/certifications 添加/更新资质",
+        "系统定时任务: 到期前30天/15天/7天/1天自动生成预警",
+        "预警记录写入 supplier_alerts 表",
+        "GET /api/supplier-alerts 采购方查看所有资质预警列表",
+        "触发重认证: 自动创建资格评审项目草稿，通知供应商"
+      ],
+      "priority": 8,
+      "passes": true,
+      "dependsOn": ["US-107"],
+      "phase": 1,
+      "notes": "资质类型: 营业执照、生产许可证、质量体系认证、行业资质"
+    },
+    {
+      "id": "US-201",
+      "title": "寻源项目创建 (RFQ/RFP)",
+      "description": "采购方创建寻源项目（询价/招标），从合格供应商库选择邀请对象",
+      "acceptanceCriteria": [
+        "POST /api/sourcing/projects 创建寻源项目",
+        "类型: RFQ(询价) / RFP(招标) / RFI(信息征集)",
+        "必填: 项目名称、类型、物料明细、截止时间",
+        "可选: 评审标准、预算上限、是否启用反向竞价",
+        "从合格供应商库多选邀请供应商",
+        "自动通知被邀请供应商"
+      ],
+      "priority": 9,
       "passes": false,
-      "dependsOn": ["US-005"],
-      "notes": "放置在 Tab 1（降本分析）下方作为子模块"
+      "dependsOn": ["US-107"],
+      "phase": 2,
+      "notes": "寻源项目表: project_name, type, materials[], invited_suppliers[], deadline, status"
+    },
+    {
+      "id": "US-202",
+      "title": "供应商接收/拒绝邀请",
+      "description": "供应商在门户收到寻源邀请通知，可确认参与或谢绝",
+      "acceptanceCriteria": [
+        "GET /api/sourcing/projects/invitations 供应商查看收到的寻源邀请",
+        "POST /api/sourcing/projects/{id}/accept 供应商确认参与",
+        "POST /api/sourcing/projects/{id}/decline 供应商谢绝参与",
+        "谢绝时需填写原因（可选）",
+        "参与/谢绝结果实时同步给采购方",
+        "采购方可见响应状态: 已邀请 / 已接受 / 已谢绝 / 待响应"
+      ],
+      "priority": 10,
+      "passes": false,
+      "dependsOn": ["US-201"],
+      "phase": 2,
+      "notes": "寻源截止时间前，被邀请供应商均可响应"
+    },
+    {
+      "id": "US-203",
+      "title": "供应商在线投标报价",
+      "description": "供应商在线加密提交技术方案与报价，支持多轮报价",
+      "acceptanceCriteria": [
+        "GET /api/sourcing/projects/{id}/bid 供应商获取投标表单",
+        "POST /api/sourcing/projects/{id}/bid 供应商提交投标",
+        "报价字段: 各项物料单价/总价、交期、付款方式、技术方案摘要",
+        "支持上传附件: 技术方案文档、资质证明",
+        "报价加密存储，采购方在开标前无法查看",
+        "支持多轮报价，每轮报价记录完整"
+      ],
+      "priority": 11,
+      "passes": false,
+      "dependsOn": ["US-202"],
+      "phase": 2,
+      "notes": "投标报价加密存储(bid_encrypted)，开标后解密可见"
+    },
+    {
+      "id": "US-204",
+      "title": "采购方在线开标比价",
+      "description": "采购方在线开标、查看比价表、发布澄清公告",
+      "acceptanceCriteria": [
+        "POST /api/sourcing/projects/{id}/open-bids 采购方开标（截止时间到达或手动开标）",
+        "开标后: 所有报价解密可见",
+        "GET /api/sourcing/projects/{id}/comparison 获取比价表",
+        "比价表字段: 供应商名称、各项物料报价、交期、总价排名",
+        "POST /api/sourcing/projects/{id}/clarifications 采购方发布澄清公告",
+        "澄清公告自动推送给所有参与供应商"
+      ],
+      "priority": 12,
+      "passes": false,
+      "dependsOn": ["US-203"],
+      "phase": 2,
+      "notes": "开标前报价不可查看，确保公平公正"
+    },
+    {
+      "id": "US-205",
+      "title": "中标/落标通知发布",
+      "description": "寻源结束后，采购方在线发布授标结果，中标/落标供应商收到通知",
+      "acceptanceCriteria": [
+        "POST /api/sourcing/projects/{id}/award 采购方发布授标结果",
+        "指定中标供应商及各项物料分配数量",
+        "自动发送中标通知给中标供应商（portal消息）",
+        "自动发送落标通知给未中标供应商（可选附原因）",
+        "授标后寻源项目状态变为'已授标'",
+        "未中标供应商可查询自己的报价及排名"
+      ],
+      "priority": 13,
+      "passes": false,
+      "dependsOn": ["US-204"],
+      "phase": 2,
+      "notes": "落标通知原因可选，不强制填写以避免纠纷"
+    },
+    {
+      "id": "US-206",
+      "title": "合同模板管理",
+      "description": "系统维护合同模板库，支持按品类选择模板",
+      "acceptanceCriteria": [
+        "POST /api/contracts/templates 创建合同模板",
+        "GET /api/contracts/templates 获取模板列表",
+        "GET /api/contracts/templates/{id} 获取模板详情",
+        "模板字段: 模板名称、适用品类、模板内容（富文本）、变量占位符",
+        "变量占位符格式: {{supplier_name}}, {{contract_amount}}, {{delivery_date}} 等",
+        "支持模板启用/停用状态管理"
+      ],
+      "priority": 14,
+      "passes": false,
+      "dependsOn": ["US-205"],
+      "phase": 2,
+      "notes": "合同模板变量在生成合同草案时自动替换"
+    },
+    {
+      "id": "US-207",
+      "title": "合同草案生成与协同编辑",
+      "description": "基于寻源结果一键生成合同草案，双方在线编辑批注条款",
+      "acceptanceCriteria": [
+        "POST /api/contracts/generate-from-sourcing/{sourcing_id} 基于授标结果生成合同草案",
+        "自动填充: 供应商信息、标的物料、价格条款、交期",
+        "GET /api/contracts/{id} 获取合同详情",
+        "PATCH /api/contracts/{id} 双方均可修改合同条款",
+        "支持批注功能: 供应商在特定条款添加批注，采购方回复批注",
+        "合同状态: 起草中 / 审批中 / 已签署 / 已生效 / 已到期 / 已终止"
+      ],
+      "priority": 15,
+      "passes": false,
+      "dependsOn": ["US-206"],
+      "phase": 2,
+      "notes": "合同批注表: contract_id, clause_id, party, comment, created_at"
+    },
+    {
+      "id": "US-208",
+      "title": "合同签署与状态跟踪",
+      "description": "集成电子签章，双方授权人在线完成签署，流程留痕",
+      "acceptanceCriteria": [
+        "POST /api/contracts/{id}/sign-initiate 采购方发起签署",
+        "指定签署顺序: 供应商先签 or 采购方先签",
+        "GET /api/contracts/{id}/sign-status 查询签署状态",
+        "签署方收到签署通知（portal消息 + 可选邮件）",
+        "POST /api/contracts/{id}/sign 签署方完成签署",
+        "签署完成后: 状态变为'已生效'，锁定合同内容不可修改",
+        "签署记录完整留存: 签署人、签署时间、IP地址"
+      ],
+      "priority": 16,
+      "passes": false,
+      "dependsOn": ["US-207"],
+      "phase": 2,
+      "notes": "电子签章为模拟实现，记录签署动作和时间戳即可"
+    },
+    {
+      "id": "US-301",
+      "title": "采购预测发布",
+      "description": "采购方根据生产计划，向供应商发布中长期物料需求预测",
+      "acceptanceCriteria": [
+        "POST /api/forecast/purchases 创建采购预测",
+        "必填: 供应商ID、预测周期(年/季度/月)、物料明细列表",
+        "每项物料: 物料编码、预测数量、预计采购月份",
+        "预测状态: 草稿 / 已发布 / 已确认 / 已过期",
+        "发布后自动推送给对应供应商",
+        "支持滚动预测更新"
+      ],
+      "priority": 17,
+      "passes": false,
+      "dependsOn": ["US-208"],
+      "phase": 3,
+      "notes": "采购预测表: forecast_id, supplier_id, period, items[], status"
+    },
+    {
+      "id": "US-302",
+      "title": "供应商产能响应",
+      "description": "供应商基于预测反馈产能准备情况、备料计划或潜在供应风险",
+      "acceptanceCriteria": [
+        "GET /api/forecast/purchases/received 供应商查看收到的采购预测",
+        "POST /api/forecast/purchases/{id}/respond 供应商提交产能响应",
+        "响应字段: 各项物料的承诺供应量、承诺交期、风险说明",
+        "风险等级: 正常 / 预警 / 危机",
+        "采购方可见所有供应商的响应状态",
+        "响应后预测状态变为'已确认'"
+      ],
+      "priority": 18,
+      "passes": false,
+      "dependsOn": ["US-301"],
+      "phase": 3,
+      "notes": "产能预警: 当承诺量 < 预测量 * 80% 时触发预警"
+    },
+    {
+      "id": "US-303",
+      "title": "采购订单发布与接收",
+      "description": "采购方创建采购订单，自动发布至供应商门户，供应商在线确认",
+      "acceptanceCriteria": [
+        "POST /api/purchase-orders/collaborative 创建协同采购订单",
+        "必填: 供应商ID、物料明细、订单金额、交期要求",
+        "创建后自动推送至供应商portal",
+        "GET /api/supplier-portal/orders 供应商查看收到的订单",
+        "POST /api/supplier-portal/orders/{id}/confirm 供应商确认订单",
+        "POST /api/supplier-portal/orders/{id}/reject 供应商提出异议（需填写原因）",
+        "采购方处理异议后重新推送"
+      ],
+      "priority": 19,
+      "passes": false,
+      "dependsOn": ["US-302"],
+      "phase": 3,
+      "notes": "订单状态: 待确认 / 已确认 / 异议处理中 / 已关闭 / 已取消"
+    },
+    {
+      "id": "US-304",
+      "title": "采购订单变更与关闭",
+      "description": "订单履行完成后状态更新，因故变更/取消时实时同步供应商",
+      "acceptanceCriteria": [
+        "POST /api/purchase-orders/{id}/close 采购方关闭订单",
+        "POST /api/purchase-orders/{id}/cancel 采购方取消订单（需填写原因）",
+        "状态变更自动推送通知给供应商",
+        "已取消订单不可再修改",
+        "GET /api/purchase-orders/{id}/history 查看订单变更历史"
+      ],
+      "priority": 20,
+      "passes": false,
+      "dependsOn": ["US-303"],
+      "phase": 3,
+      "notes": "订单变更记录完整留存"
+    },
+    {
+      "id": "US-305",
+      "title": "要货计划发布",
+      "description": "采购方基于实际生产排程，向供应商发布短期精确的要货计划",
+      "acceptanceCriteria": [
+        "POST /api/delivery/schedules 创建要货计划",
+        "关联采购订单",
+        "必填: 供应商ID、物料明细、要求到货日期/时间窗口",
+        "时间精度: 支持精确到日或周",
+        "发布后自动推送供应商确认",
+        "支持批量创建多期要货计划"
+      ],
+      "priority": 21,
+      "passes": false,
+      "dependsOn": ["US-303"],
+      "phase": 3,
+      "notes": "要货计划表: schedule_id, po_id, supplier_id, items[], required_date"
+    },
+    {
+      "id": "US-306",
+      "title": "供应商确认/修正要货计划",
+      "description": "供应商确认要货计划，或反馈调整建议",
+      "acceptanceCriteria": [
+        "GET /api/supplier-portal/delivery-schedules 供应商查看要货计划",
+        "POST /api/supplier-portal/delivery-schedules/{id}/confirm 供应商确认",
+        "POST /api/supplier-portal/delivery-schedules/{id}/suggest 供应商建议调整",
+        "调整建议字段: 建议到货日期、调整原因",
+        "采购方收到调整建议，可批准或驳回",
+        "双方协商达成一致后，生成最终送货承诺"
+      ],
+      "priority": 22,
+      "passes": false,
+      "dependsOn": ["US-305"],
+      "phase": 3,
+      "notes": "调整建议需采购方审批，不可单方面修改"
+    },
+    {
+      "id": "US-307",
+      "title": "供应商创建送货计划 (ASN)",
+      "description": "供应商根据确认的要货计划，创建详细的发货通知 ASN",
+      "acceptanceCriteria": [
+        "POST /api/asn 创建ASN（提前发货通知）",
+        "必填: 关联要货计划ID、实际发货日期、运输商信息、装箱明细",
+        "自动生成ASN编号",
+        "状态: 待确认 / 已确认 / 已到货",
+        "创建后自动推送给采购方",
+        "发货前可多次修改ASN"
+      ],
+      "priority": 23,
+      "passes": false,
+      "dependsOn": ["US-306"],
+      "phase": 3,
+      "notes": "ASN表: asn_id, schedule_id, actual_ship_date, carrier, items[], status"
+    },
+    {
+      "id": "US-308",
+      "title": "采购方确认送货计划",
+      "description": "采购方仓库或物料计划员确认送货预约，或进行调整",
+      "acceptanceCriteria": [
+        "GET /api/asn 采购方查看所有ASN列表",
+        "GET /api/asn/{id} 查看ASN详情",
+        "POST /api/asn/{id}/confirm 采购方确认送货预约",
+        "POST /api/asn/{id}/adjust 采购方调整送货安排（如时间冲突）",
+        "调整后通知供应商确认",
+        "记录确认/调整历史"
+      ],
+      "priority": 24,
+      "passes": false,
+      "dependsOn": ["US-307"],
+      "phase": 3,
+      "notes": "ASN确认是收货准备的必要前提"
+    },
+    {
+      "id": "US-309",
+      "title": "装箱单与批次信息提交",
+      "description": "送货前，供应商在线提交详细的物流、包装、批次及物料追溯信息",
+      "acceptanceCriteria": [
+        "POST /api/asn/{id}/packing-list 供应商提交装箱单",
+        "装箱单字段: 箱号、每箱物料明细(含批号/序列号)、数量、毛重/净重",
+        "批次信息: 生产日期、有效期、产地",
+        "条码信息: 支持上传条码清单文件",
+        "采购方可在收货前查看装箱单，提前准备验收",
+        "收货后批次信息自动关联入库记录"
+      ],
+      "priority": 25,
+      "passes": false,
+      "dependsOn": ["US-307"],
+      "phase": 3,
+      "notes": "批次追溯是白酒行业的合规要求（溯源体系）"
+    },
+    {
+      "id": "US-310",
+      "title": "收货与验收结果发布",
+      "description": "采购方收货后实时更新收货数量和质量检验结果，供应商可实时查询",
+      "acceptanceCriteria": [
+        "POST /api/receipts 创建收货单（ASN到货后）",
+        "收货字段: 实际到货数量、到货时间、验收结果",
+        "验收结果枚举: 合格 / 不合格 / 特采",
+        "不合格详情: 不合格数量、不合格原因、处理方式",
+        "自动通知供应商",
+        "供应商实时查询收货状态和检验结果"
+      ],
+      "priority": 26,
+      "passes": false,
+      "dependsOn": ["US-308"],
+      "phase": 3,
+      "notes": "收货单关联采购订单、ASN、质检单"
+    },
+    {
+      "id": "US-401",
+      "title": "供应商创建结算单",
+      "description": "供应商基于已确认的收货记录，在线生成对账单",
+      "acceptanceCriteria": [
+        "POST /api/settlement/statements 创建结算单",
+        "基于已收货且未结算的收货单汇总",
+        "结算字段: 结算期间、供应商信息、应收金额、物料明细对账",
+        "金额自动汇总（可人工调整）",
+        "状态: 待采购方审核 / 已确认 / 有异议 / 已关闭",
+        "提交后自动推送给采购方"
+      ],
+      "priority": 27,
+      "passes": false,
+      "dependsOn": ["US-310"],
+      "phase": 4,
+      "notes": "结算单表: statement_id, supplier_id, period, total_amount, status"
+    },
+    {
+      "id": "US-402",
+      "title": "采购方审核结算单",
+      "description": "采购方在线核对结算单与收货记录，确认或提出差异",
+      "acceptanceCriteria": [
+        "GET /api/settlement/statements 采购方查看结算单列表",
+        "GET /api/settlement/statements/{id} 查看结算单详情（含关联收货单明细）",
+        "POST /api/settlement/statements/{id}/approve 采购方确认结算单",
+        "POST /api/settlement/statements/{id}/dispute 采购方提出差异",
+        "差异处理: 双方在线协商，确认调整后的结算金额",
+        "确认后形成无争议应付账款"
+      ],
+      "priority": 28,
+      "passes": false,
+      "dependsOn": ["US-401"],
+      "phase": 4,
+      "notes": "应付账款 = 结算单确认金额"
+    },
+    {
+      "id": "US-403",
+      "title": "发票创建与上传",
+      "description": "供应商根据结算单创建发票信息，上传发票影像",
+      "acceptanceCriteria": [
+        "POST /api/invoices 创建发票记录",
+        "关联结算单",
+        "发票字段: 发票号、发票类型、金额、税率、开票日期",
+        "上传发票影像（PDF/图片）",
+        "状态: 开票中 / 待采购方审核 / 已通过 / 已拒绝",
+        "自动推送发票信息给采购方"
+      ],
+      "priority": 29,
+      "passes": false,
+      "dependsOn": ["US-402"],
+      "phase": 4,
+      "notes": "发票表: invoice_id, statement_id, invoice_number, amount, tax_rate, image_url"
+    },
+    {
+      "id": "US-404",
+      "title": "采购方三单匹配与发票审批",
+      "description": "系统自动执行三单匹配（订单/收货单/发票），采购方在线审批",
+      "acceptanceCriteria": [
+        "GET /api/invoices/{id}/match 获取三单匹配结果",
+        "匹配字段: 订单号、收货单号、发票号、金额、数量",
+        "匹配结果: 完全匹配 / 金额差异 / 数量差异 / 不匹配",
+        "POST /api/invoices/{id}/approve 采购方审批发票",
+        "POST /api/invoices/{id}/reject 采购方拒绝发票（需填写原因）",
+        "审批通过后自动生成应付账款记录"
+      ],
+      "priority": 30,
+      "passes": false,
+      "dependsOn": ["US-403"],
+      "phase": 4,
+      "notes": "三单匹配: PO + Receipt + Invoice，三者金额和数量应一致"
+    },
+    {
+      "id": "US-405",
+      "title": "付款状态发布与查询",
+      "description": "采购方发布付款状态，供应商一站式查询所有订单的付款进度",
+      "acceptanceCriteria": [
+        "POST /api/payments 创建付款记录",
+        "关联发票/结算单",
+        "付款字段: 付款金额、付款方式、预计付款日期、实际付款日期",
+        "状态枚举: 付款申请已提交 / 财务已审批 / 银行已支付 / 已到账",
+        "采购方更新付款状态，自动通知供应商",
+        "GET /api/supplier-portal/payments 供应商查询所有付款记录",
+        "支持按时间段、状态、供应商筛选"
+      ],
+      "priority": 31,
+      "passes": false,
+      "dependsOn": ["US-404"],
+      "phase": 4,
+      "notes": "付款进度透明化是提升供应商满意度的重要因素"
     }
   ]
 }

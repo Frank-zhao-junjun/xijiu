@@ -58,7 +58,17 @@
 │   │   ├── App.tsx                # 路由配置
 │   │   ├── index.css              # 全局样式
 │   │   ├── pages/                 # 页面组件
-│   │   │   ├── Dashboard.tsx      # 数据中台首页
+│   │   │   ├── buyer/             # 采购端页面
+│   │   │   │   ├── BuyerHome.tsx  # 采购端首页
+│   │   │   │   ├── SourcingList.tsx    # 寻源项目列表
+│   │   │   │   ├── SourcingDetail.tsx  # 寻源项目详情
+│   │   │   │   └── ContractList.tsx    # 合同管理
+│   │   │   ├── supplier/          # 供应商端页面
+│   │   │   │   ├── SupplierHome.tsx    # 供应商端首页
+│   │   │   │   ├── InvitationList.tsx # 收到的邀请
+│   │   │   │   ├── BidList.tsx        # 投标管理
+│   │   │   │   ├── ContractList.tsx    # 合同管理
+│   │   │   │   └── OrderList.tsx      # 销售订单
 │   │   │   ├── PurchaseOrderList.tsx    # 采购订单列表
 │   │   │   ├── PurchaseOrderDetail.tsx # 采购订单详情
 │   │   │   ├── SupplierList.tsx   # 供应商列表
@@ -107,14 +117,47 @@ npx server -l 5000
 
 ## API 接口清单
 
+### Phase 1: 供应商准入与主数据协同 (US-101~US-108)
+
 | 方法 | 路径 | 功能 | 状态 |
 |------|------|------|------|
 | GET | `/health` | 健康检查 | ✅ |
-| GET | `/dashboard/stats` | 仪表盘核心指标 | ✅ |
-| GET | `/dashboard/inventory-alerts` | 库存预警信息 | ✅ |
 | GET | `/suppliers/` | 供应商列表 | ✅ |
 | POST | `/suppliers/` | 创建供应商 | ✅ |
 | GET | `/suppliers/{id}` | 供应商详情 | ✅ |
+| PUT | `/suppliers/{id}` | 更新供应商 | ✅ |
+| POST | `/suppliers/{id}/qualifications` | 提交资质文件 | ✅ |
+| GET | `/suppliers/{id}/qualifications` | 获取资质列表 | ✅ |
+| GET | `/suppliers/qualifications/{qual_id}` | 资质详情 | ✅ |
+| POST | `/qualifications/{qual_id}/review` | 资质评审（通过/拒绝） | ✅ |
+| GET | `/dashboard/buyer-home` | 采购端首页统计 | ✅ |
+| GET | `/dashboard/supplier-home` | 供应商端首页统计 | ✅ |
+
+### Phase 2: 寻源与合同协同 (US-201~US-208)
+
+| 方法 | 路径 | 功能 | 状态 |
+|------|------|------|------|
+| GET | `/sourcing/` | 寻源项目列表 | ✅ |
+| POST | `/sourcing/` | 创建寻源项目 | ✅ |
+| GET | `/sourcing/{id}` | 寻源项目详情 | ✅ |
+| POST | `/sourcing/{id}/invite` | 邀请供应商 | ✅ |
+| GET | `/sourcing/{id}/invitations` | 查看邀请列表 | ✅ |
+| POST | `/sourcing/{id}/invitations/{inv_id}/accept` | 供应商接受邀请 | ✅ |
+| POST | `/sourcing/{id}/invitations/{inv_id}/decline` | 供应商拒绝邀请 | ✅ |
+| GET | `/sourcing/{id}/bids` | 供应商投标列表 | ✅ |
+| POST | `/sourcing/{id}/bids` | 供应商投标 | ✅ |
+| PUT | `/sourcing/{sourcing_id}/bids/{bid_id}` | 供应商修改投标 | ✅ |
+| GET | `/sourcing/{id}/bids/{bid_id}` | 投标详情 | ✅ |
+| POST | `/sourcing/{id}/open` | 开标 | ✅ |
+| POST | `/sourcing/{sourcing_id}/bids/{bid_id}/award` | 授标 | ✅ |
+| GET | `/contracts/` | 合同列表 | ✅ |
+| GET | `/contracts/{id}` | 合同详情 | ✅ |
+| POST | `/contracts/{id}/sign` | 合同签署 | ✅ |
+
+### Phase 3: 预测与订单执行协同 (US-301~US-315)
+
+| 方法 | 路径 | 功能 | 状态 |
+|------|------|------|------|
 | GET | `/materials/` | 物料/原料列表 | ✅ |
 | GET | `/materials/low-stock` | 低库存物料 | ✅ |
 | GET | `/products/` | 产品列表 | ✅ |
@@ -122,10 +165,26 @@ npx server -l 5000
 | GET | `/products/brands` | 产品品牌 | ✅ |
 | GET | `/purchase-orders/` | 采购订单列表 | ✅ |
 | GET | `/purchase-orders/{id}` | 订单详情 | ✅ |
+| POST | `/purchase-orders/` | 创建采购订单 | ✅ |
+| PUT | `/purchase-orders/{id}` | 更新采购订单 | ✅ |
+| POST | `/purchase-orders/{id}/confirm` | 确认采购订单 | ✅ |
+| POST | `/purchase-orders/{id}/dispatch` | 发货 | ✅ |
 | GET | `/sales-orders/` | 销售订单列表 | ✅ |
 | GET | `/production/today-stats` | 今日生产统计 | ✅ |
 | GET | `/production/records` | 生产记录列表 | ✅ |
 | GET | `/warehouses/` | 仓库列表 | ✅ |
+| GET | `/receipts/` | 入库单列表 | ✅ |
+| POST | `/receipts/` | 创建入库单 | ✅ |
+| GET | `/inspections/` | 质检单列表 | ✅ |
+| POST | `/inspections/` | 创建质检单 | ✅ |
+| GET | `/inventory/` | 库存查询 | ✅ |
+
+### 仪表盘 & 通用
+
+| 方法 | 路径 | 功能 | 状态 |
+|------|------|------|------|
+| GET | `/dashboard/stats` | 仪表盘核心指标 | ✅ |
+| GET | `/dashboard/inventory-alerts` | 库存预警信息 | ✅ |
 
 ## 关键技术说明
 
@@ -160,3 +219,22 @@ npx server -l 5000
 - 确认后端服务运行在 8000 端口
 - 确认前端代理配置正确（`vite.config.ts`）
 - 直接测试后端：`curl http://localhost:8000/health`
+
+## 项目进度
+
+### 已完成
+
+- **Phase 1 (供应商准入与主数据协同)**：
+  - US-101~US-108 全部完成
+  - 供应商主数据管理、资质文件上传、资质评审流程
+  - 采购端/供应商端首页统计面板
+
+- **Phase 2 (寻源与合同协同)**：
+  - US-201~US-208 全部完成
+  - 寻源项目创建、供应商邀请、投标管理、开标比价、授标、合同生成与签署
+  - 前端重构：去除数据中台，拆分为采购端/供应商端双入口
+
+### 待执行
+
+- **Phase 3 (预测与订单执行协同)**：US-301~US-315
+- **Phase 4 (财务结算协同)**：US-401~US-410

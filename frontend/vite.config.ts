@@ -46,6 +46,18 @@ export default defineConfig({
       '/health': {
         target: 'http://localhost:8000',
         changeOrigin: true
+      },
+      '/sourcing': {
+        target: 'http://localhost:8000',
+        changeOrigin: true
+      },
+      '/contracts': {
+        target: 'http://localhost:8000',
+        changeOrigin: true
+      },
+      '/contract-templates': {
+        target: 'http://localhost:8000',
+        changeOrigin: true
       }
     }
   }

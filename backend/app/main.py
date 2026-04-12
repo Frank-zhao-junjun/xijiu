@@ -1,7 +1,7 @@
 """白酒供应链管理系统 - FastAPI主应用"""
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import suppliers, materials, products, purchase_orders, sales_orders, production, warehouses, dashboard, supplier_portal
+from app.api import suppliers, materials, products, purchase_orders, sales_orders, production, warehouses, dashboard, supplier_portal, supplier_qualification, qualification, sourcing
 
 app = FastAPI(title="白酒供应链管理系统", description="白酒供应链全流程管理API", version="1.0.0", docs_url="/docs", redoc_url="/redoc")
 
@@ -16,6 +16,9 @@ app.include_router(production.router)
 app.include_router(warehouses.router)
 app.include_router(dashboard.router)
 app.include_router(supplier_portal.router)
+app.include_router(supplier_qualification.router)
+app.include_router(qualification.router)
+app.include_router(sourcing.router)
 
 @app.get("/", tags=["首页"])
 async def root():

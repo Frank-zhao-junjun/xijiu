@@ -3,7 +3,7 @@ import asyncio
 import json
 from datetime import datetime, timedelta
 from app.core.database import async_engine, Base, AsyncSessionLocal
-from app.models.supply_chain import Supplier, Material, Product, PurchaseOrder, PurchaseOrderItem, SalesOrder, ProductionRecord, MaterialUsage, Warehouse, ShipmentNote, ShipmentNoteItem
+from app.models.supply_chain import (Supplier, Material, Product, PurchaseOrder, PurchaseOrderItem, SalesOrder, ProductionRecord, MaterialUsage, Warehouse, ShipmentNote, ShipmentNoteItem, SupplierInvitation, SupplierRegistration, SupplierCertification, SupplierAlert, QualificationProject, QualificationSubmission, SourcingProject, SourcingInvitation, SourcingBid, SourcingAward, ContractTemplate, Contract, ContractComment, PurchaseForecast, ForecastResponse, DeliverySchedule, ASN, Receipt, SettlementStatement, Invoice, Payment, User)
 
 async def init_database():
     print("Creating database tables...")
@@ -19,7 +19,18 @@ async def seed_demo_data():
         if result.scalars().first():
             print("Demo data already exists, skipping...")
             return
-        
+
+        # 创建系统用户（用于外键引用）
+        from app.models.supply_chain import User
+        users = [
+            User(username="admin", display_name="系统管理员", role="buyer"),
+            User(username="buyer1", display_name="张明远", role="buyer"),
+            User(username="buyer2", display_name="李采购员", role="buyer"),
+            User(username="buyer3", display_name="王采购员", role="buyer"),
+        ]
+        session.add_all(users)
+        await session.flush()
+
         suppliers = [
             Supplier(name="贵州红缨子高粱种植基地", contact_person="张三", phone="13800138001", email="zhangsan@example.com", address="贵州省茅台镇", rating=4.8,
                      origin_type="核心产区", main_category="粮食类", annual_capacity=2000.0, cooperation_years=3, quality_score=4.9, delivery_score=4.7, service_score=4.8,
@@ -123,6 +134,68 @@ async def seed_demo_data():
             Warehouse(name="三号包装材料库", location="茅台镇包装仓库C区", capacity=100000, current_stock=50000, manager="周经理")
         ])
         
+        # ===== 供应商资质证书（用于演示到期预警）=====
+        from app.models.supply_chain import SupplierCertification, SupplierAlert
+        certs = [
+            # 即将到期的资质（7天后到期 -> 触发7天预警）
+            SupplierCertification(
+                supplier_id=suppliers[2].id, cert_type="质量体系认证",
+                cert_name="ISO22000食品安全管理体系认证",
+                cert_no="ISO-2020-JS001",
+                issue_date=datetime(2021, 1, 1),
+                expiry_date=datetime.now() + timedelta(days=7),
+                status="valid"
+            ),
+            # 15天后到期
+            SupplierCertification(
+                supplier_id=suppliers[1].id, cert_type="生产许可证",
+                cert_name="食品生产许可证",
+                cert_no="JY15105020001234",
+                issue_date=datetime(2021, 3, 10),
+                expiry_date=datetime.now() + timedelta(days=15),
+                status="valid"
+            ),
+            # 已过期资质
+            SupplierCertification(
+                supplier_id=suppliers[2].id, cert_type="行业资质",
+                cert_name="有机产品认证",
+                cert_no="ORG-2022-GZ001",
+                issue_date=datetime(2022, 6, 1),
+                expiry_date=datetime.now() - timedelta(days=5),
+                status="expired"
+            ),
+            # 正常资质（1年后到期）
+            SupplierCertification(
+                supplier_id=suppliers[0].id, cert_type="营业执照",
+                cert_name="营业执照（统一社会信用代码）",
+                cert_no="91520382MA6DJXXX01",
+                issue_date=datetime(2020, 1, 1),
+                expiry_date=datetime.now() + timedelta(days=365),
+                status="valid"
+            ),
+        ]
+        session.add_all(certs)
+        await session.flush()
+
+        # 资质预警
+        alerts = [
+            SupplierAlert(
+                supplier_id=suppliers[2].id,
+                alert_type="cert_expiring",
+                certification_id=certs[0].id,
+                message="【ISO22000食品安全管理体系认证】将于7天后到期，请及时重认证",
+                days_before_expiry=7
+            ),
+            SupplierAlert(
+                supplier_id=suppliers[2].id,
+                alert_type="cert_expired",
+                certification_id=certs[2].id,
+                message="【有机产品认证】已于5天前到期，请立即重认证",
+                days_before_expiry=0
+            ),
+        ]
+        session.add_all(alerts)
+
         await session.commit()
         print("✅ Demo data added successfully!")
 

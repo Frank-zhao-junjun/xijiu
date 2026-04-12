@@ -1,54 +1,79 @@
-# 经验日志 (Progress Log)
-# 每轮迭代自动追加，作为下一轮 AI 的"记忆"
+# 经验日志 - 供应商全链路协同平台
 
-## 项目规范
-- 技术栈: 原生 HTML/CSS/JS + ECharts 5.5
-- 设计风格: 深色科技风 (#0a0e1a 背景, Cyan #38bdf8 主色)
-- 文件位置: assets/js/whatif/ 目录
+## Phase 0: 需求分析与架构规划
 
-## 已知命令
-- 项目使用静态文件，无需构建步骤
-- 验证方式: 文件存在性检查 + 代码语法检查
+=== 项目启动 ===
+- 项目名称: 白酒供应链协同平台 - 供应商全链路协同
+- 分5大阶段: 供应商准入 / 寻源合同 / 订单执行 / 财务结算
+- 当前Phase: Phase 1 (供应商准入)
+- 已有资产: React前端(Ant Design)、FastAPI后端、SQLite数据库
 
-## 代码规范
-- 使用 ES6+ 语法
-- 类名采用 PascalCase
-- 方法名采用 camelCase
-- 注释说明非 obvious 的逻辑
+=== 架构决策 ===
+- 采用前后端分离架构
+  - 前端: React + Ant Design + Vite (现有)
+  - 后端: FastAPI + SQLAlchemy + SQLite (现有)
+  - 协同API: /api/supplier-portal/*, /api/qualification/*, /api/sourcing/*, /api/forecast/*, /api/asn/*, /api/settlement/*, /api/invoices/*, /api/payments/*
+- 数据库: 复用现有SQLite，新增协同相关表
+- 认证: 供应商portal使用独立token认证(简化版)
 
-## 踩过的坑
-# (将在每轮迭代后自动追加)
+=== 技术债务/风险 ===
+- 现有数据库需新增大量协同相关表
+- 需要新增API路由: 约15个新路由文件
+- 需要新增前端页面: 供应商portal、评审管理、寻源管理等
 
-=== Iteration 1 (US-001) ===
-- Discovered: ES Module 语法 (export default) 在 Node.js 中需要 --input-type=module 才能直接执行验证
-- Discovered: 使用 Map 数据结构管理场景注册表比 Object 更安全（自动去重、有序遍历）
-- Pattern: 场景参数定义采用统一 schema { key, label, type, defaultValue, min, max, step, unit }，便于 UI 动态渲染
-- Pattern: 内置场景在构造函数中自动注册，外部可通过 register() 扩展，符合开放-封闭原则
-- Gotcha: Node.js 验证 ES Module 时需用 node --input-type=module -e "import ..." 形式
+---
 
-=== Iteration 2 (US-002) ===
-- Discovered: 每个场景的计算逻辑差异大，用 switch-case 分发到私有方法更清晰
-- Discovered: 敏感度分析应作为后处理步骤，与业务计算解耦
-- Pattern: 结果对象统一结构 { metrics[], summary{}, sensitivity{} } 便于 UI 层统一渲染
-- Pattern: 使用 _num() 工具方法安全提取参数值，避免 NaN 传播
-- Pattern: _sanitizeParams 过滤空值，防止 null/undefined/'' 进入计算链
-- Gotcha: 百分比变化计算时分母可能为0（如质量隐性成本基准为0），需 Math.max(1, denominator) 保护
-- Gotcha: 批量采购场景中折扣率输入是百分比(5)，内部计算需除以100转小数(0.05)
+## Phase 1: US-101~US-108 (供应商准入)
 
-=== Iteration 3 (US-003) ===
-- Discovered: Intl.NumberFormat 在 Node.js 中完全可用，无需 polyfill
-- Discovered: formatResult() 是核心方法，将 SimulationEngine 的原始结果转换为 UI 层可直接消费的结构
-- Pattern: 颜色编码用 CSS 十六进制值（#22c55e/#ef4444）而非类名，便于直接用于 style 属性
-- Pattern: ECharts 数据转换方法(toBarChart/toLineChart/toRadarChart)与格式化器放在一起，保持数据转换逻辑集中
-- Pattern: _generateHeadline() 生成一行摘要文本，适合在面板顶部快速展示
-- Gotcha: Unicode 箭头字符（▲▼→）在 shell 脚本中作为三元运算符操作数时可能引起解析问题，测试时需注意转义
+=== US-101: 供应商注册邀请 ===
+- 核心表: supplier_invitations (invitation_code PK, supplier_name, email, status, expiry_date, created_by)
+- API: POST /api/supplier-portal/invitations, GET /api/supplier-portal/invitations/{code}/validate
+- 邀请码格式: 8位随机字符串
+- 状态枚举: pending/accepted/expired
 
-=== Iteration 4 (US-004) ===
-- Discovered: 面板组件是最大的文件(26KB)，包含 HTML/CSS/JS 三合一，职责较重但符合原生项目特点
-- Discovered: _buildHTML() + _getStyleTag() 模式将样式内联到组件中，避免外部 CSS 依赖
-- Pattern: 使用 data-param 属性标记表单字段，_collectParamValues() 统一收集所有参数值
-- Pattern: 图表类型通过 data-chart 属性在 Tab 按钮上声明，事件委托统一处理切换
-- Pattern: ECharts 实例存储为 _chartInstance，切换图表时先 dispose() 再 init()，防止内存泄漏
-- Pattern: window 全局对象用于跨模块访问 registry/engine/formatter（简单项目的实用做法）
-- Gotcha: Node.js 环境没有 window 对象，面板代码中引用 window.scenarioRegistry 会在服务端报错
-- Gotcha: _buildBarOption() 中从 formatted 字符串提取数值不够精确，理想情况应保留原始数值
+=== US-102: 供应商自助注册 ===
+- 注册信息独立表: supplier_registrations (独立于主suppliers表)
+- 审核通过后写入suppliers表
+
+=== US-101 实施经验 ===
+- 新增模型: SupplierInvitation, SupplierRegistration, SupplierCertification, SupplierAlert, User
+- 新增API路由: /api/supplier-portal/invitations, /register, /pending-audit, /supplier-alerts
+- async SQLAlchemy 注意点: join/relationship访问需用selectinload()预加载
+- 邀请码格式: 8位UUID hex段
+- 状态枚举: InvitationStatus(PENDING/ACCEPTED/EXPIRED/CANCELLED)
+- 注册审核通过后: 自动创建supplier主数据记录
+- 资质预警: 使用days_before_expiry字段触发预警消息
+- UUID: python的uuid.uuid4().hex[:8].upper()
+
+---
+
+## 通用模式
+
+=== 数据模型命名 ===
+- 协同相关表统一前缀: supplier_*, qualification_*, sourcing_*, forecast_*, asn_*, settlement_*
+- 主数据表: suppliers, materials, products (已有)
+
+=== API路由分组 ===
+- /api/supplier-portal/* - 供应商门户API
+- /api/qualification/* - 资格评审API
+- /api/sourcing/* - 寻源API
+- /api/forecast/* - 预测API
+- /api/asn/* - ASN/送货API
+- /api/settlement/* - 结算API
+- /api/invoices/* - 发票API
+- /api/payments/* - 付款API
+
+=== Phase 1 完成清单 (US-101~US-108) ===
+✅ US-101 供应商注册邀请
+✅ US-102 供应商自助注册  
+✅ US-103 注册状态查询与审核
+✅ US-104 资格评审项目创建
+✅ US-105 供应商填写问卷
+✅ US-106 采购方评审
+✅ US-107 资格审批通过/驳回
+✅ US-108 资质预警与到期检查
+
+=== Phase 2 待实现: 寻源与合同 (US-201~US-212) ===
+- 寻源项目: SourcingProject/SourcingInvitation/SourcingBid/SourcingAward
+- 合同管理: ContractTemplate/Contract/ContractComment
+- 核心API: /api/sourcing/*, /api/contracts/*

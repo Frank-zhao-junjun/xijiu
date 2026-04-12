@@ -1,56 +1,166 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { Layout as AntLayout, Menu } from 'antd'
-import { DashboardOutlined, FileTextOutlined, TeamOutlined, InboxOutlined, AppstoreOutlined, AuditOutlined } from '@ant-design/icons'
+import { Layout as AntLayout, Menu, Badge, Dropdown, Button } from 'antd'
+import {
+  DashboardOutlined, FileTextOutlined, TeamOutlined, ShoppingOutlined,
+  InboxOutlined, AppstoreOutlined, AuditOutlined, SwapOutlined,
+  TrophyOutlined, ThunderboltOutlined, ContainerOutlined, MessageOutlined
+} from '@ant-design/icons'
 
-const { Sider, Content } = AntLayout
+const { Sider, Content, Header } = AntLayout
+
+// 采购端菜单
+const buyerItems = [
+  { key: '/buyer', icon: <DashboardOutlined />, label: '首页概览' },
+  { type: 'group' as const, label: '寻源与合同', children: [
+    { key: '/buyer/sourcing', icon: <ThunderboltOutlined />, label: '寻源项目' },
+    { key: '/buyer/contracts', icon: <TrophyOutlined />, label: '合同管理' },
+  ]},
+  { type: 'group' as const, label: '采购执行', children: [
+    { key: '/buyer/orders', icon: <FileTextOutlined />, label: '采购订单' },
+    { key: '/buyer/suppliers', icon: <TeamOutlined />, label: '供应商管理' },
+  ]},
+  { type: 'group' as const, label: '仓储管理', children: [
+    { key: '/buyer/receipts', icon: <InboxOutlined />, label: '入库单' },
+    { key: '/buyer/inventory', icon: <AppstoreOutlined />, label: '库存查询' },
+    { key: '/buyer/inspections', icon: <AuditOutlined />, label: '质检单' },
+  ]},
+]
+
+// 供应商端菜单
+const supplierItems = [
+  { key: '/supplier', icon: <DashboardOutlined />, label: '首页概览' },
+  { type: 'group' as const, label: '寻源协同', children: [
+    { key: '/supplier/invitations', icon: <MessageOutlined />, label: '收到的邀请' },
+    { key: '/supplier/bids', icon: <SwapOutlined />, label: '投标管理' },
+  ]},
+  { type: 'group' as const, label: '订单执行', children: [
+    { key: '/supplier/orders', icon: <ShoppingOutlined />, label: '销售订单' },
+    { key: '/supplier/contracts', icon: <ContainerOutlined />, label: '合同管理' },
+  ]},
+]
+
+function getSelectedKey(pathname: string, portal: string) {
+  const prefix = `/${portal}`
+  if (pathname === prefix || pathname === `${prefix}/`) return prefix
+  if (pathname.startsWith(prefix)) return pathname.split('?')[0]
+  return prefix
+}
+
+function getMenuItems(portal: string) {
+  return portal === 'buyer' ? buyerItems : supplierItems
+}
 
 const Layout: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
+  // 默认进入采购端
+  const pathParts = location.pathname.split('/').filter(Boolean)
+  const [portal, setPortal] = useState<'buyer' | 'supplier'>(
+    (pathParts[0] === 'buyer' || pathParts[0] === 'supplier') ? pathParts[0] as 'buyer' | 'supplier' : 'buyer'
+  )
+  const menuItems = getMenuItems(portal)
+  const selectedKey = getSelectedKey(location.pathname, portal)
 
-  const items = [
-    { key: 'dashboard', icon: <DashboardOutlined />, label: '数据中台', onClick: () => navigate('/dashboard') },
-    { type: 'group' as const, label: '采购管理', children: [
-      { key: 'orders', icon: <FileTextOutlined />, label: '采购订单', onClick: () => navigate('/orders') },
-      { key: 'suppliers', icon: <TeamOutlined />, label: '供应商管理', onClick: () => navigate('/suppliers') }
-    ]},
-    { type: 'group' as const, label: '仓储管理', children: [
-      { key: 'receipts', icon: <InboxOutlined />, label: '入库单', onClick: () => navigate('/receipts') },
-      { key: 'inventory', icon: <AppstoreOutlined />, label: '库存查询', onClick: () => navigate('/inventory') },
-      { key: 'inspections', icon: <AuditOutlined />, label: '质检单', onClick: () => navigate('/inspections') }
-    ]}
-  ]
-
-  const selected = () => {
-    const p = location.pathname
-    if (p.startsWith('/dashboard')) return ['dashboard']
-    if (p.startsWith('/orders')) return ['orders']
-    if (p.startsWith('/suppliers')) return ['suppliers']
-    if (p.startsWith('/receipts')) return ['receipts']
-    if (p.startsWith('/inventory')) return ['inventory']
-    if (p.startsWith('/inspections')) return ['inspections']
-    return ['dashboard']
+  const switchPortal = (p: 'buyer' | 'supplier') => {
+    setPortal(p)
+    navigate(`/${p}`)
   }
+
+  const portalLabel = portal === 'buyer' ? '采购端' : '供应商端'
 
   return (
     <AntLayout style={{ minHeight: '100vh' }}>
-      <Sider width={240} style={{ background: 'var(--sidebar-bg)', position: 'fixed', height: '100vh', left: 0, top: 0 }}>
-        <div style={{ height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-          <h1 style={{ color: 'white', fontSize: 16, fontWeight: 600, margin: 0 }}>白酒供应链</h1>
-        </div>
-        <Menu mode="inline" theme="dark" selectedKeys={selected()} items={items} style={{ background: 'transparent', borderRight: 0 }} />
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 16, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#5B75FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 13, fontWeight: 600 }}>张</div>
-            <div><div style={{ color: 'white', fontSize: 13, fontWeight: 600 }}>张明远</div><div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12 }}>采购主管</div></div>
+      {/* 顶部栏：Portal 切换 */}
+      <Header style={{
+        background: '#fff', borderBottom: '1px solid #f0f0f0',
+        padding: '0 24px', position: 'fixed', width: '100%', zIndex: 100,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <span style={{ fontSize: 18, fontWeight: 700, color: '#1a1a1a' }}>白酒供应链协同平台</span>
+          <div style={{ display: 'flex', gap: 4, background: '#f5f5f5', borderRadius: 6, padding: 3 }}>
+            <Button
+              type={portal === 'buyer' ? 'primary' : 'text'}
+              size="small"
+              onClick={() => switchPortal('buyer')}
+              style={{ borderRadius: 4, fontWeight: 600 }}
+            >
+              采购端
+            </Button>
+            <Button
+              type={portal === 'supplier' ? 'primary' : 'text'}
+              size="small"
+              onClick={() => switchPortal('supplier')}
+              style={{ borderRadius: 4, fontWeight: 600 }}
+            >
+              供应商端
+            </Button>
           </div>
         </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <Badge dot><span style={{ fontSize: 13 }}>{portalLabel}</span></Badge>
+          <Dropdown menu={{
+            items: [
+              { key: 'name', label: portal === 'buyer' ? '张明远' : '贵州红缨子高粱' },
+              { key: 'role', label: portal === 'buyer' ? '采购主管' : '供应商管理员' },
+              { type: 'divider' },
+              { key: 'exit', label: '退出登录' },
+            ]
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+              <div style={{
+                width: 32, height: 32, borderRadius: '50%',
+                background: portal === 'buyer' ? '#3E5BF2' : '#52c41a',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'white', fontSize: 13, fontWeight: 600
+              }}>
+                {portal === 'buyer' ? '张' : '贵'}
+              </div>
+            </div>
+          </Dropdown>
+        </div>
+      </Header>
+
+      {/* 侧边栏 */}
+      <Sider
+        width={220}
+        style={{
+          background: '#001529',
+          position: 'fixed',
+          height: '100vh',
+          left: 0,
+          top: 64,  // below header
+          overflowY: 'auto'
+        }}
+      >
+        <div style={{
+          padding: '16px 16px 8px',
+          color: 'rgba(255,255,255,0.65)',
+          fontSize: 12,
+          fontWeight: 600,
+          letterSpacing: 1
+        }}>
+          {portal === 'buyer' ? '采 购 端' : '供 应 商 端'}
+        </div>
+        <Menu
+          mode="inline"
+          theme="dark"
+          selectedKeys={[selectedKey]}
+          items={menuItems}
+          style={{ background: 'transparent', borderRight: 0 }}
+          onClick={({ key }) => navigate(key)}
+        />
       </Sider>
-      <AntLayout style={{ marginLeft: 240 }}>
-        <Content style={{ padding: 12, minHeight: '100vh' }}><Outlet /></Content>
+
+      {/* 内容区 */}
+      <AntLayout style={{ marginLeft: 220, marginTop: 64 }}>
+        <Content style={{ padding: 20, minHeight: 'calc(100vh - 64px)' }}>
+          <Outlet />
+        </Content>
       </AntLayout>
     </AntLayout>
   )
 }
+
 export default Layout

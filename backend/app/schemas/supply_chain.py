@@ -237,4 +237,112 @@ class SupplierTodoStats(BaseModel):
     pending_confirm_orders: int = 0   # 待确认订单
     pending_shipment_notes: int = 0   # 待发货
     in_transit_count: int = 0         # 运输中
+
+
+# ==================== Phase 1: 供应商准入 Schemas ====================
+
+class InvitationCreate(BaseModel):
+    """创建邀请请求"""
+    invited_supplier_name: str
+    invited_email: str
+    invited_contact_person: Optional[str] = None
+    expiry_days: int = 7        # 有效期天数，默认7天
+    notes: Optional[str] = None
+
+
+class InvitationResponse(BaseModel):
+    """邀请响应"""
+    id: int
+    invitation_code: str
+    invited_supplier_name: str
+    invited_email: str
+    invited_contact_person: Optional[str] = None
+    status: str
+    expiry_date: datetime
+    created_at: datetime
+    notes: Optional[str] = None
+    class Config: from_attributes = True
+
+
+class InvitationValidateResponse(BaseModel):
+    """验证邀请码响应"""
+    valid: bool
+    invitation_code: str
+    invited_supplier_name: str
+    invited_email: str
+    expiry_date: datetime
+    message: Optional[str] = None
+
+
+class RegistrationCreate(BaseModel):
+    """供应商注册请求"""
+    invitation_code: Optional[str] = None
+    company_name: str
+    unified_credit_code: str
+    contact_person: str
+    contact_phone: str
+    contact_email: Optional[str] = None
+    address: Optional[str] = None
+    main_categories: Optional[str] = None
+    annual_capacity: Optional[float] = 0.0
+    employee_count: Optional[int] = 0
+    established_year: Optional[int] = None
+
+
+class RegistrationResponse(BaseModel):
+    """注册响应"""
+    id: int
+    company_name: str
+    unified_credit_code: str
+    contact_person: str
+    contact_phone: str
+    contact_email: Optional[str] = None
+    status: str
+    created_at: datetime
+    class Config: from_attributes = True
+
+
+class AuditRequest(BaseModel):
+    """审核请求"""
+    action: str        # approve/reject
+    opinion: Optional[str] = None  # 审核意见
+
+
+class CertificationCreate(BaseModel):
+    """添加供应商资质"""
+    cert_type: str    # 营业执照/生产许可证/质量体系认证/行业资质
+    cert_name: str
+    cert_no: Optional[str] = None
+    issue_date: Optional[datetime] = None
+    expiry_date: datetime
+    cert_file_url: Optional[str] = None
+
+
+class CertificationResponse(BaseModel):
+    """资质响应"""
+    id: int
+    supplier_id: int
+    cert_type: str
+    cert_name: str
+    cert_no: Optional[str] = None
+    issue_date: Optional[datetime] = None
+    expiry_date: datetime
+    status: str
+    days_until_expiry: Optional[int] = None
+    created_at: datetime
+    class Config: from_attributes = True
+
+
+class SupplierAlertResponse(BaseModel):
+    """供应商预警响应"""
+    id: int
+    supplier_id: int
+    alert_type: str
+    message: str
+    days_before_expiry: Optional[int] = None
+    is_read: int
+    is_resolved: int
+    created_at: datetime
+    supplier_name: Optional[str] = None
+    class Config: from_attributes = True
     pending_settlement: int = 0       # 待对账
