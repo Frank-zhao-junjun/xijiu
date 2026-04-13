@@ -13,7 +13,9 @@ const SupplierList: React.FC = () => {
   const loadData = async () => {
     setLoading(true)
     try {
-      const [s, st] = await Promise.all([getSuppliers({ page: 1, page_size: 20 }), getSupplierStats()])
+      const results = await Promise.allSettled([getSuppliers({ page: 1, page_size: 20 }), getSupplierStats()])
+      const s = results[0].status === 'fulfilled' ? results[0].value : []
+      const st = results[1].status === 'fulfilled' ? results[1].value : null
       const data = Array.isArray(s) ? s : []
       setSuppliers(data); setTotal(data.length); setStats(st)
     } finally { setLoading(false) }

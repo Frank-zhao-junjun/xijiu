@@ -10,7 +10,11 @@ const Dashboard: React.FC = () => {
   const [fulfillment, setFulfillment] = useState<any[]>([])
 
   useEffect(() => {
-    Promise.all([getDashboardMetrics(), getAlerts(), getTodos(), getFulfillmentStatus()]).then(([m, a, t, f]) => {
+    Promise.allSettled([getDashboardMetrics(), getAlerts(), getTodos(), getFulfillmentStatus()]).then((results) => {
+      const m = results[0].status === 'fulfilled' ? results[0].value : null
+      const a = results[1].status === 'fulfilled' ? results[1].value : null
+      const t = results[2].status === 'fulfilled' ? results[2].value : []
+      const f = results[3].status === 'fulfilled' ? results[3].value : []
       setMetrics(m)
       // alerts API returns { low_stock_materials: [...], low_stock_products: [...] }
       const alertData: any[] = []

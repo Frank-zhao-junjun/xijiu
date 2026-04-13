@@ -767,6 +767,7 @@ class Invoice(Base):
     approved_by = Column(Integer, ForeignKey("users.id"), nullable=True)
     approved_at = Column(DateTime, nullable=True)
     rejection_reason = Column(String(500))
+    remarks = Column(Text)  # 备注
     created_at = Column(DateTime, default=datetime.utcnow)
 
     supplier = relationship("Supplier")

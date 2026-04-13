@@ -15,7 +15,9 @@ const InspectionList: React.FC = () => {
   const loadData = async () => {
     setLoading(true)
     try {
-      const [i, s] = await Promise.all([getInspections({ page: 1, page_size: 20 }), getInspectionStats()])
+      const results = await Promise.allSettled([getInspections({ page: 1, page_size: 20 }), getInspectionStats()])
+      const i = results[0].status === 'fulfilled' ? results[0].value : []
+      const s = results[1].status === 'fulfilled' ? results[1].value : null
       const data = Array.isArray(i) ? i : []
       setInspections(data); setTotal(data.length); setStats(s)
     } finally { setLoading(false) }

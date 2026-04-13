@@ -14,7 +14,9 @@ const InventoryList: React.FC = () => {
   const loadData = async () => {
     setLoading(true)
     try {
-      const [i, s] = await Promise.all([getInventory({ page: 1, page_size: 20 }), getInventoryStats()])
+      const results = await Promise.allSettled([getInventory({ page: 1, page_size: 20 }), getInventoryStats()])
+      const i = results[0].status === 'fulfilled' ? results[0].value : []
+      const s = results[1].status === 'fulfilled' ? results[1].value : null
       const data = Array.isArray(i) ? i : []
       setInventory(data); setTotal(data.length); setStats(s)
     } finally { setLoading(false) }

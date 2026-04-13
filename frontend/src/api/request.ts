@@ -8,7 +8,13 @@ const api = axios.create({
 
 api.interceptors.response.use(
   (response) => response.data,
-  (error) => Promise.reject(error)
+  (error) => {
+    // Silently handle backend unavailable errors
+    if (!error.response || error.response.status === 502) {
+      console.warn('[API] Backend service unavailable')
+    }
+    return Promise.reject(error)
+  }
 )
 
 // Type-safe wrapper: interceptor unwraps AxiosResponse, so .get/.post return data directly
