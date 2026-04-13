@@ -89,6 +89,7 @@ function App() {
               <Route path="invitations" element={<SupplierInvitationList />} />
               <Route path="bids" element={<BidList />} />
               {/* Phase 3: 订单执行 */}
+              <Route path="orders" element={<SupplierOrderConfirm />} />
               <Route path="order-confirm" element={<SupplierOrderConfirm />} />
               <Route path="capacity" element={<CapacityResponse />} />
               <Route path="delivery-plans" element={<SupplierDeliveryPlan />} />

@@ -28,6 +28,21 @@
 - 发票管理与三单匹配
 - 付款申请与审批
 
+## 页面覆盖（2026-04-13）
+
+### 供应商端 Phase 3
+- 订单确认：`/supplier/order-confirm`（兼容旧入口：`/supplier/orders`）
+- 产能响应：`/supplier/capacity`
+- 要货计划：`/supplier/delivery-plans`
+- 送货计划（ASN）：`/supplier/asn`
+
+### 供应商端 Phase 4
+- 结算单：`/supplier/settlements`
+- 发票管理：`/supplier/invoices`
+
+### 首页快捷入口
+- 供应商首页已增加 Phase 3/4 直达入口与待办统计（订单/预测/要货计划/ASN/结算/发票）
+
 ### 公告栏运营
 - 公告、政策、操作指引发布
 - 已读记录管理
