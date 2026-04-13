@@ -162,11 +162,11 @@ const WaybillList: React.FC = () => {
             <Timeline
               items={[
                 { color: 'green', children: '订单已创建' },
-                selectedNote.status !== 'pending' && { color: 'blue', children: '货物已发货' },
-                (selectedNote.status === 'shipped' || selectedNote.status === 'in_transit') && { color: 'blue', children: '运输中...' },
-                selectedNote.status === 'arrived' && { color: 'orange', children: '已到达仓库' },
-                selectedNote.status === 'received' && { color: 'green', children: '已入库签收' },
-              ].filter(Boolean)}
+                ...(selectedNote.status !== 'pending' ? [{ color: 'blue' as const, children: '货物已发货' }] : []),
+                ...((selectedNote.status === 'shipped' || selectedNote.status === 'in_transit') ? [{ color: 'blue' as const, children: '运输中...' }] : []),
+                ...(selectedNote.status === 'arrived' ? [{ color: 'orange' as const, children: '已到达仓库' }] : []),
+                ...(selectedNote.status === 'received' ? [{ color: 'green' as const, children: '已入库签收' }] : []),
+              ]}
             />
           </div>
         )}
