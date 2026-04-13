@@ -77,8 +77,8 @@ export const registerSupplier = (data: {
   established_year?: number
 }) => api.post('/supplier-portal/register', data)
 
-export const getRegistrationStatus = (email: string) =>
-  api.get('/supplier-portal/register/status', { params: { email } })
+export const getRegistrationStatus = (unifiedCreditCode: string) =>
+  api.get('/supplier-portal/register/status', { params: { unified_credit_code: unifiedCreditCode } })
 
 // US-103: 注册审核
 export const getPendingAuditRegistrations = () =>
@@ -117,8 +117,8 @@ export const getQualificationProjects = (params?: { status?: string }) =>
 export const getQualificationProject = (id: number) =>
   api.get(`/qualification/projects/${id}`)
 
-export const getQuestionnaire = (projectId: number) =>
-  api.get(`/qualification/projects/${projectId}/questionnaire`)
+export const getQuestionnaire = (projectId: number, config?: { params?: Record<string, any> }) =>
+  api.get(`/qualification/projects/${projectId}/questionnaire`, config)
 
 // US-105: 供应商填写问卷
 export const submitQualification = (projectId: number, data: {
@@ -486,56 +486,59 @@ export const getPaymentStats = () =>
 
 // ============ 预测与订单执行 API (Phase 3) ============
 
-// US-301: 采购预测 (模拟 ERP 同步数据)
-export const getForecasts = (params?: { status?: string; keyword?: string }) =>
-  api.get('/purchase-orders/', { params: { view: 'forecast', ...params } }).catch(() => [])
+// US-301: 采购预测 (供应商视角)
+export const getForecasts = (params?: { supplier_id?: number; status?: string }) =>
+  api.get('/supplier-portal/forecasts', { params })
+
+export const getForecastDetail = (forecastId: number, params?: { supplier_id?: number }) =>
+  api.get(`/supplier-portal/forecasts/${forecastId}`, { params })
 
 // US-302: 供应商产能响应
 export const submitCapacityResponse = (forecastId: number, data: {
+  forecast_id: number
   supplier_id: number
-  capacity_quantity: number
-  delivery_commitment: string
-  risk_notes?: string
-}) => api.post(`/purchase-orders/${forecastId}/capacity-response`, data)
+  items: { material_id: number; material_name?: string; committed_qty: number; committed_date?: string; risk_level?: string }[]
+  risk_summary?: string
+}) => api.post(`/supplier-portal/forecasts/${forecastId}/respond`, data)
 
 // US-303: 采购订单 - 供应商确认/拒绝
+export const getSupplierOrders = (params?: { supplier_id?: number; status?: string }) =>
+  api.get('/supplier-portal/orders', { params })
+
 export const confirmOrder = (id: number, supplierId: number) =>
   api.post(`/supplier-portal/orders/${id}/confirm?supplier_id=${supplierId}`, { action: 'confirm' })
 
 export const rejectOrder = (id: number, supplierId: number, reason: string) =>
   api.post(`/supplier-portal/orders/${id}/confirm?supplier_id=${supplierId}`, { action: 'reject', rejection_reason: reason })
 
-// US-305: 要货计划 (模拟 ERP 同步)
-export const getDeliveryPlans = (params?: { status?: string }) =>
-  api.get('/purchase-orders/', { params: { view: 'delivery-plan', ...params } }).catch(() => [])
+// US-305: 要货计划 (供应商视角)
+export const getDeliveryPlans = (params?: { supplier_id?: number; status?: string }) =>
+  api.get('/supplier-portal/delivery-schedules', { params })
 
 // US-306: 供应商确认要货计划
 export const confirmDeliveryPlan = (planId: number, data: {
-  supplier_id: number
   confirmed: boolean
   adjustment_notes?: string
-}) => api.post(`/purchase-orders/${planId}/confirm-delivery`, data)
+  adjusted_quantities?: Record<string, number>
+}) => api.post(`/supplier-portal/delivery-schedules/${planId}/confirm`, data)
 
-// US-307: ASN / 送货计划
-export const getASNList = (params?: { status?: string; supplier_id?: number }) =>
-  api.get('/logistics/shipment-notes/', { params: { ...params, view: 'asn' } })
+// US-307: ASN / 送货计划 (供应商视角)
+export const getASNList = (params?: { supplier_id?: number; status?: string }) =>
+  api.get('/supplier-portal/asns', { params })
 
 export const createASN = (data: {
-  purchase_order_id: number
+  po_id: number
   supplier_id: number
+  delivery_schedule_id?: number
+  asn_no?: string
   carrier_name?: string
+  carrier_contact?: string
   tracking_no?: string
-  vehicle_no?: string
-  driver_name?: string
-  driver_phone?: string
-  expected_arrival?: string
-  shipping_address?: string
-  total_quantity: number
-  items?: { material_name: string; quantity: number; unit: string }[]
-}) => api.post('/logistics/shipment-notes/', data)
+  items: { material_id?: number; material_name?: string; quantity: number; batch_no?: string; production_date?: string }[]
+}) => api.post('/supplier-portal/asns', data)
 
-export const updateASN = (id: number, data: Record<string, any>) =>
-  api.put(`/logistics/shipment-notes/${id}`, data)
+export const submitASN = (asnId: number) =>
+  api.post(`/supplier-portal/asns/${asnId}/submit`)
 
 // US-308: 采购方确认送货计划
 export const approveASN = (id: number) =>

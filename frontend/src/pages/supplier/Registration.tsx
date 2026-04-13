@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Card, Form, Input, Button, Steps, Result, Descriptions, Tag, message } from 'antd'
-import { UserOutlined, MailOutlined, PhoneOutlined, HomeOutlined } from '@ant-design/icons'
+import { UserOutlined, MailOutlined, PhoneOutlined, HomeOutlined, SearchOutlined } from '@ant-design/icons'
 import { registerSupplier, validateInvitationCode, getRegistrationStatus } from '../../api'
 
 const SupplierRegistration: React.FC = () => {
@@ -8,6 +8,8 @@ const SupplierRegistration: React.FC = () => {
   const [invitationInfo, setInvitationInfo] = useState<any>(null)
   const [registrationResult, setRegistrationResult] = useState<any>(null)
   const [statusData, setStatusData] = useState<any>(null)
+  const [statusLoading, setStatusLoading] = useState(false)
+  const [statusUcc, setStatusUcc] = useState('')
   const [form] = Form.useForm()
   const [codeForm] = Form.useForm()
 
@@ -43,14 +45,15 @@ const SupplierRegistration: React.FC = () => {
     }
   }
 
-  // 查询注册状态
+  // 查询注册状态（按统一社会信用代码）
   const handleCheckStatus = async () => {
+    if (!statusUcc.trim()) { message.warning('请输入统一社会信用代码'); return }
     try {
-      const email = form.getFieldValue('email')
-      if (!email) { message.warning('请输入邮箱后查询'); return }
-      const res = await getRegistrationStatus(email) as any
+      setStatusLoading(true)
+      const res = await getRegistrationStatus(statusUcc.trim()) as any
       setStatusData(res)
     } catch { message.error('查询失败') }
+    finally { setStatusLoading(false) }
   }
 
   return (
@@ -66,13 +69,28 @@ const SupplierRegistration: React.FC = () => {
               </Form.Item>
             </Form>
             <div style={{ textAlign: 'center', marginTop: 16 }}>
-              <Button type="link" onClick={handleCheckStatus}>查询已有注册状态</Button>
+              <div style={{ maxWidth: 400, margin: '0 auto' }}>
+                <Input.Search
+                  placeholder="输入统一社会信用代码查询注册状态"
+                  value={statusUcc}
+                  onChange={e => setStatusUcc(e.target.value)}
+                  enterButton={<><SearchOutlined /> 查询状态</>}
+                  loading={statusLoading}
+                  onSearch={handleCheckStatus}
+                  maxLength={18}
+                />
+              </div>
             </div>
             {statusData && (
               <Card size="small" style={{ marginTop: 16 }}>
                 <Descriptions bordered column={1} size="small">
                   <Descriptions.Item label="公司名称">{statusData.company_name || '-'}</Descriptions.Item>
-                  <Descriptions.Item label="状态"><Tag color={statusData.status === 'approved' ? 'green' : statusData.status === 'rejected' ? 'red' : 'orange'}>{statusData.status}</Tag></Descriptions.Item>
+                  <Descriptions.Item label="状态">
+                    <Tag color={statusData.status === 'approved' ? 'green' : statusData.status === 'rejected' ? 'red' : 'orange'}>
+                      {statusData.found === false ? '未找到记录' : statusData.status || '未知'}
+                    </Tag>
+                  </Descriptions.Item>
+                  {statusData.audit_opinion && <Descriptions.Item label="审核意见">{statusData.audit_opinion}</Descriptions.Item>}
                 </Descriptions>
               </Card>
             )}

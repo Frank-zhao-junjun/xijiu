@@ -3,6 +3,8 @@ import { Card, Table, Tag, Button, Modal, Form, Input, InputNumber, Descriptions
 import { PlusOutlined, EyeOutlined } from '@ant-design/icons'
 import { getStatements, createStatement, getStatementStats } from '../../api'
 
+const SUPPLIER_ID = 1
+
 const SupplierSettlement: React.FC = () => {
   const [data, setData] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
@@ -16,7 +18,7 @@ const SupplierSettlement: React.FC = () => {
     setLoading(true)
     try {
       const [stmtRes, statsRes] = await Promise.allSettled([
-        getStatements(),
+        getStatements({ supplier_id: SUPPLIER_ID }),
         getStatementStats()
       ])
       setData(stmtRes.status === 'fulfilled' ? (Array.isArray(stmtRes.value) ? stmtRes.value : []) : [])
@@ -30,7 +32,7 @@ const SupplierSettlement: React.FC = () => {
   const handleCreate = async () => {
     try {
       const values = await form.validateFields()
-      await createStatement({ ...values, supplier_id: 1 })
+      await createStatement({ ...values, supplier_id: SUPPLIER_ID })
       message.success('结算单已创建')
       setCreateOpen(false)
       form.resetFields()

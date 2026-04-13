@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Card, Table, Tag, Button, Modal, Form, Input, Descriptions, Space, message } from 'antd'
 import { CheckCircleOutlined, CloseCircleOutlined, EyeOutlined } from '@ant-design/icons'
-import { getOrders, confirmOrder, rejectOrder } from '../../api'
+import { getSupplierOrders, confirmOrder, rejectOrder } from '../../api'
 
 const SupplierOrderConfirm: React.FC = () => {
   const [data, setData] = useState<any[]>([])
@@ -16,7 +16,7 @@ const SupplierOrderConfirm: React.FC = () => {
   const fetchData = async () => {
     setLoading(true)
     try {
-      const res = await getOrders() as any
+      const res = await getSupplierOrders({ supplier_id: SUPPLIER_ID }) as any
       setData(Array.isArray(res) ? res : [])
     } catch { setData([]) }
     setLoading(false)

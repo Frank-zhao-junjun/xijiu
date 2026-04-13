@@ -66,11 +66,21 @@ const SupplierCertification: React.FC = () => {
   ]
 
   const alertColumns = [
-    { title: '资质名称', dataIndex: 'cert_name', key: 'cert_name' },
-    { title: '级别', dataIndex: 'level', key: 'level', render: (v: string) => <Tag color={v === 'critical' ? 'red' : 'orange'}>{v === 'critical' ? '紧急' : '警告'}</Tag> },
-    { title: '到期日期', dataIndex: 'expiry_date', key: 'expiry_date', render: (v: string) => v ? new Date(v).toLocaleDateString() : '-' },
+    { title: '预警类型', dataIndex: 'alert_type', key: 'alert_type', render: (v: string) => {
+      const map: Record<string, { color: string; text: string }> = {
+        cert_expiring: { color: 'orange', text: '即将到期' },
+        cert_expired: { color: 'red', text: '已过期' },
+        qualification_expiring: { color: 'orange', text: '资格即将到期' },
+      }
+      const info = map[v] || { color: 'default', text: v }
+      return <Tag color={info.color}>{info.text}</Tag>
+    }},
+    { title: '预警信息', dataIndex: 'message', key: 'message', ellipsis: true },
+    { title: '剩余天数', dataIndex: 'days_before_expiry', key: 'days_before_expiry', render: (v: number) => v > 0 ? `${v}天` : '已过期' },
+    { title: '供应商', dataIndex: 'supplier_name', key: 'supplier_name' },
+    { title: '状态', key: 'status', render: (_: any, r: any) => <Tag color={r.is_resolved ? 'green' : 'orange'}>{r.is_resolved ? '已处理' : '待处理'}</Tag> },
     { title: '操作', key: 'action', render: (_: any, r: any) => (
-      <Button type="link" size="small" onClick={() => handleRenew(r.id)}>提交重认证</Button>
+      !r.is_resolved ? <Button type="link" size="small" onClick={() => handleRenew(r.id)}>提交重认证</Button> : <span style={{ color: '#999' }}>-</span>
     )},
   ]
 
@@ -82,9 +92,9 @@ const SupplierCertification: React.FC = () => {
         <Table rowKey="id" dataSource={certs} columns={certColumns} loading={loading} pagination={{ pageSize: 10 }} />
       </Card>
 
-      {alerts.filter((a: any) => a.status === 'active').length > 0 && (
+      {alerts.filter((a: any) => !a.is_resolved).length > 0 && (
         <Card title="过期预警" style={{ marginBottom: 16 }}>
-          <Table rowKey="id" dataSource={alerts.filter((a: any) => a.status === 'active')} columns={alertColumns} pagination={false} size="small" />
+          <Table rowKey="id" dataSource={alerts.filter((a: any) => !a.is_resolved)} columns={alertColumns} pagination={false} size="small" />
         </Card>
       )}
 

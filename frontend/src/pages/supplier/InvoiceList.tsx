@@ -3,6 +3,8 @@ import { Card, Table, Tag, Button, Modal, Form, Input, InputNumber, Select, Desc
 import { PlusOutlined, EyeOutlined } from '@ant-design/icons'
 import { getInvoices, createInvoice, getInvoiceStats } from '../../api'
 
+const SUPPLIER_ID = 1
+
 const SupplierInvoice: React.FC = () => {
   const [data, setData] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
@@ -14,7 +16,7 @@ const SupplierInvoice: React.FC = () => {
   const fetchData = async () => {
     setLoading(true)
     try {
-      const res = await getInvoices() as any
+      const res = await getInvoices({ supplier_id: SUPPLIER_ID }) as any
       setData(Array.isArray(res) ? res : [])
     } catch { setData([]) }
     setLoading(false)
@@ -25,7 +27,7 @@ const SupplierInvoice: React.FC = () => {
   const handleCreate = async () => {
     try {
       const values = await form.validateFields()
-      await createInvoice({ ...values, supplier_id: 1 })
+      await createInvoice({ ...values, supplier_id: SUPPLIER_ID })
       message.success('发票已创建')
       setCreateOpen(false)
       form.resetFields()
