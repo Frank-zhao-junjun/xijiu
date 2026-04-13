@@ -11,6 +11,7 @@ const SupplierOrderConfirm: React.FC = () => {
   const [rejectOpen, setRejectOpen] = useState(false)
   const [rejectTarget, setRejectTarget] = useState<any>(null)
   const [form] = Form.useForm()
+  const SUPPLIER_ID = 1  // Demo: 当前供应商ID
 
   const fetchData = async () => {
     setLoading(true)
@@ -25,7 +26,7 @@ const SupplierOrderConfirm: React.FC = () => {
 
   const handleConfirm = async (id: number) => {
     try {
-      await confirmOrder(id)
+      await confirmOrder(id, SUPPLIER_ID)
       message.success('订单已确认')
       fetchData()
     } catch { message.error('确认失败') }
@@ -35,7 +36,7 @@ const SupplierOrderConfirm: React.FC = () => {
     if (!rejectTarget) return
     try {
       const values = await form.validateFields()
-      await rejectOrder(rejectTarget.id, values.reason)
+      await rejectOrder(rejectTarget.id, SUPPLIER_ID, values.reason)
       message.success('订单已拒绝')
       setRejectOpen(false)
       form.resetFields()

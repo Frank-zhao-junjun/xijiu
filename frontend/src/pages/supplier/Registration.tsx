@@ -87,20 +87,20 @@ const SupplierRegistration: React.FC = () => {
             <Form.Item name="company_name" label="公司名称" rules={[{ required: true, message: '请输入公司名称' }]}>
               <Input prefix={<HomeOutlined />} placeholder="公司全称" />
             </Form.Item>
+            <Form.Item name="unified_credit_code" label="统一社会信用代码" rules={[{ required: true, message: '请输入统一社会信用代码' }]}>
+              <Input placeholder="18位统一社会信用代码" maxLength={18} />
+            </Form.Item>
             <Form.Item name="contact_person" label="联系人" rules={[{ required: true, message: '请输入联系人' }]}>
               <Input prefix={<UserOutlined />} placeholder="联系人姓名" />
             </Form.Item>
-            <Form.Item name="email" label="邮箱" rules={[{ required: true, type: 'email', message: '请输入有效邮箱' }]}>
-              <Input prefix={<MailOutlined />} placeholder="name@company.com" />
-            </Form.Item>
-            <Form.Item name="phone" label="电话" rules={[{ required: true, message: '请输入电话' }]}>
+            <Form.Item name="contact_phone" label="联系电话" rules={[{ required: true, message: '请输入联系电话' }]}>
               <Input prefix={<PhoneOutlined />} placeholder="手机号码" />
             </Form.Item>
-            <Form.Item name="business_scope" label="经营范围">
-              <Input.TextArea rows={2} placeholder="主营业务描述" />
+            <Form.Item name="contact_email" label="邮箱">
+              <Input prefix={<MailOutlined />} placeholder="name@company.com" />
             </Form.Item>
-            <Form.Item name="registered_capital" label="注册资本">
-              <Input placeholder="如：500万元" />
+            <Form.Item name="main_categories" label="主营品类">
+              <Input.TextArea rows={2} placeholder="如：高粱、小麦等原料" />
             </Form.Item>
             <Form.Item name="address" label="地址">
               <Input placeholder="公司注册地址" />

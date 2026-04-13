@@ -74,6 +74,7 @@ async def create_invitation(
         notes=body.notes
     )
     db.add(invitation)
+    await db.flush()
     await db.commit()
     await db.refresh(invitation)
     return invitation

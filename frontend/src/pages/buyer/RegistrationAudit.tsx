@@ -38,8 +38,7 @@ const RegistrationAudit: React.FC = () => {
       const values = await form.validateFields()
       await auditRegistration(auditTarget.id, {
         action: auditAction,
-        reason: values.reason || '',
-        auditor: '张明远'
+        opinion: values.reason || values.opinion || '',
       })
       message.success(auditAction === 'approve' ? '已通过' : '已驳回')
       setAuditModalOpen(false)

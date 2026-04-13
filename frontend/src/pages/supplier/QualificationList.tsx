@@ -46,8 +46,8 @@ const SupplierQualification: React.FC = () => {
     try {
       const values = await form.validateFields()
       await submitQualification(currentProject.id, {
-        supplier_id: 1, // 默认供应商ID
-        responses: values,
+        supplier_id: 1,
+        answers: values,
       })
       message.success('问卷已提交')
       setFillOpen(false)

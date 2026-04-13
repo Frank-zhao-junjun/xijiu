@@ -1051,6 +1051,8 @@ async def sign_contract(
     contract = result.scalar_one_or_none()
     if not contract:
         raise HTTPException(status_code=404, detail="合同不存在")
+    # 使用 Raw SQL 刷新 ORM 缓存，确保读到最新值
+    await db.refresh(contract)
     if contract.status not in ["pending_sign", "signed"]:
         raise HTTPException(status_code=400, detail="当前状态不允许签署")
 

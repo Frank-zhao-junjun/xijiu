@@ -36,8 +36,11 @@ const QualificationProjectList: React.FC = () => {
     try {
       const values = await form.validateFields()
       await createQualificationProject({
-        ...values,
-        supplier_ids: values.supplier_ids || [],
+        project_name: values.project_name,
+        target_categories: values.target_categories || '原料',
+        target_supplier_ids: values.target_supplier_ids || [],
+        description: values.description,
+        deadline: values.deadline,
       })
       message.success('评审项目已创建')
       setModalOpen(false)
@@ -90,13 +93,16 @@ const QualificationProjectList: React.FC = () => {
 
       <Modal title="创建资格评审项目" open={modalOpen} onOk={handleCreate} onCancel={() => { setModalOpen(false); form.resetFields() }} width={560}>
         <Form form={form} layout="vertical">
-          <Form.Item name="name" label="项目名称" rules={[{ required: true, message: '请输入项目名称' }]}>
+          <Form.Item name="project_name" label="项目名称" rules={[{ required: true, message: '请输入项目名称' }]}>
             <Input placeholder="如：2026年度高粱供应商资格评审" />
+          </Form.Item>
+          <Form.Item name="target_categories" label="评审品类" rules={[{ required: true, message: '请输入评审品类' }]}>
+            <Input placeholder="如：高粱、小麦等原料" />
           </Form.Item>
           <Form.Item name="description" label="说明">
             <Input.TextArea rows={2} placeholder="评审要求说明" />
           </Form.Item>
-          <Form.Item name="supplier_ids" label="目标供应商">
+          <Form.Item name="target_supplier_ids" label="目标供应商">
             <Select mode="multiple" placeholder="选择供应商" optionFilterProp="label">
               {suppliers.map((s: any) => (
                 <Select.Option key={s.id} value={s.id} label={s.name}>{s.name}</Select.Option>

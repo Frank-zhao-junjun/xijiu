@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Card, Table, Tag, Button, Modal, Form, Input, DatePicker, Space, message, Descriptions } from 'antd'
+import { Card, Table, Tag, Button, Modal, Form, Input, Select, Space, message, Descriptions } from 'antd'
 import { PlusOutlined, EyeOutlined } from '@ant-design/icons'
 import { getSupplierCertifications, addSupplierCertification, getSupplierAlerts, resolveAlert } from '../../api'
 
@@ -44,7 +44,7 @@ const SupplierCertification: React.FC = () => {
 
   const handleRenew = async (alertId: number) => {
     try {
-      await resolveAlert(alertId, { resolution_note: '已提交重认证' })
+      await resolveAlert(alertId)
       message.success('已提交重认证')
       fetchData()
     } catch { message.error('操作失败') }
@@ -90,14 +90,19 @@ const SupplierCertification: React.FC = () => {
 
       <Modal title="添加资质" open={addOpen} onOk={handleAdd} onCancel={() => { setAddOpen(false); form.resetFields() }} width={520}>
         <Form form={form} layout="vertical">
+          <Form.Item name="cert_type" label="资质类型" rules={[{ required: true, message: '请选择资质类型' }]}>
+            <Select placeholder="请选择">
+              <Select.Option value="营业执照">营业执照</Select.Option>
+              <Select.Option value="生产许可证">生产许可证</Select.Option>
+              <Select.Option value="质量体系认证">质量体系认证</Select.Option>
+              <Select.Option value="行业资质">行业资质</Select.Option>
+            </Select>
+          </Form.Item>
           <Form.Item name="cert_name" label="资质名称" rules={[{ required: true, message: '请输入资质名称' }]}>
             <Input placeholder="如：食品生产许可证" />
           </Form.Item>
-          <Form.Item name="cert_number" label="证书编号">
+          <Form.Item name="cert_no" label="证书编号">
             <Input placeholder="证书编号" />
-          </Form.Item>
-          <Form.Item name="issuing_authority" label="颁发机构">
-            <Input placeholder="颁发机构名称" />
           </Form.Item>
           <Form.Item name="issue_date" label="颁发日期">
             <Input type="date" />

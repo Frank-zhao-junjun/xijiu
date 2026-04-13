@@ -66,12 +66,15 @@ export const validateInvitationCode = (code: string) =>
 export const registerSupplier = (data: {
   invitation_code: string
   company_name: string
+  unified_credit_code: string
   contact_person: string
-  email: string
-  phone: string
-  business_scope?: string
-  registered_capital?: string
+  contact_phone: string
+  contact_email?: string
   address?: string
+  main_categories?: string
+  annual_capacity?: number
+  employee_count?: number
+  established_year?: number
 }) => api.post('/supplier-portal/register', data)
 
 export const getRegistrationStatus = (email: string) =>
@@ -86,24 +89,25 @@ export const getRegistration = (id: number) =>
 
 export const auditRegistration = (id: number, data: {
   action: 'approve' | 'reject'
-  reason?: string
-  auditor?: string
+  opinion?: string
 }) => api.post(`/supplier-portal/registrations/${id}/audit`, data)
 
 export const resubmitRegistration = (id: number, data: {
-  company_name?: string
-  contact_person?: string
-  phone?: string
-  business_scope?: string
-  registered_capital?: string
+  company_name: string
+  unified_credit_code: string
+  contact_person: string
+  contact_phone: string
+  contact_email?: string
   address?: string
+  main_categories?: string
 }) => api.post(`/supplier-portal/registrations/${id}/resubmit`, data)
 
 // US-104~107: 资格评审
 export const createQualificationProject = (data: {
-  name: string
+  project_name: string
+  target_categories: string
+  target_supplier_ids: number[]
   description?: string
-  supplier_ids: number[]
   deadline?: string
 }) => api.post('/qualification/projects', data)
 
@@ -119,8 +123,7 @@ export const getQuestionnaire = (projectId: number) =>
 // US-105: 供应商填写问卷
 export const submitQualification = (projectId: number, data: {
   supplier_id: number
-  responses: Record<string, string>
-  cert_files?: string[]
+  answers: Record<string, string>
 }) => api.post(`/qualification/projects/${projectId}/submission`, data)
 
 export const getQualificationSubmissions = (projectId: number) =>
@@ -131,23 +134,20 @@ export const getQualificationSubmission = (projectId: number, supplierId: number
 
 // US-106: 评审
 export const reviewQualification = (projectId: number, supplierId: number, data: {
-  reviewer: string
-  scores: Record<string, number>
-  comments?: string
-  clarification_needed?: boolean
-  clarification_questions?: string[]
+  reviewer_id?: number
+  tech_score?: number
+  quality_score?: number
+  finance_score?: number
+  opinions?: string
+  clarification_message?: string
 }) => api.post(`/qualification/projects/${projectId}/submissions/${supplierId}/review`, data)
 
 // US-107: 审批
-export const approveQualification = (projectId: number, data: {
-  approved_by: string
-  comment?: string
-}) => api.post(`/qualification/projects/${projectId}/approve`, data)
+export const approveQualification = (projectId: number, supplierId: number, opinion = '') =>
+  api.post(`/qualification/projects/${projectId}/approve?supplier_id=${supplierId}&opinion=${encodeURIComponent(opinion)}`)
 
-export const rejectQualification = (projectId: number, data: {
-  rejected_by: string
-  reason: string
-}) => api.post(`/qualification/projects/${projectId}/reject`, data)
+export const rejectQualification = (projectId: number, supplierId: number, reason = '') =>
+  api.post(`/qualification/projects/${projectId}/reject?supplier_id=${supplierId}&reason=${encodeURIComponent(reason)}`)
 
 export const getQualificationStatus = (projectId: number) =>
   api.get(`/qualification/projects/${projectId}/status`)
@@ -157,22 +157,19 @@ export const getSupplierCertifications = (supplierId: number) =>
   api.get(`/supplier-portal/suppliers/${supplierId}/certifications`)
 
 export const addSupplierCertification = (supplierId: number, data: {
+  cert_type: string
   cert_name: string
-  cert_number?: string
-  issuing_authority?: string
+  cert_no?: string
   issue_date?: string
   expiry_date: string
-  cert_file?: string
+  cert_file_url?: string
 }) => api.post(`/supplier-portal/suppliers/${supplierId}/certifications`, data)
 
 export const getSupplierAlerts = () =>
   api.get('/supplier-portal/supplier-alerts')
 
-export const resolveAlert = (alertId: number, data: {
-  resolution_note?: string
-  new_expiry_date?: string
-  new_cert_file?: string
-}) => api.post(`/supplier-portal/supplier-alerts/${alertId}/resolve`, data)
+export const resolveAlert = (alertId: number) =>
+  api.post(`/supplier-portal/supplier-alerts/${alertId}/resolve`)
 
 export const triggerCertExpiryCheck = () =>
   api.post('/supplier-portal/cert-alerts/check')
@@ -195,7 +192,7 @@ export const initiateSigning = (id: number | string, sequence = 'supplier_first'
   api.post(`/contracts/${id}/sign-initiate?sign_sequence=${sequence}`)
 export const signContract = (id: number | string, party: 'supplier' | 'buyer') =>
   api.post(`/contracts/${id}/sign?party=${party}`)
-export const getContractTemplates = () => api.get('/contract-templates/')
+export const getContractTemplates = () => api.get('/contracts/templates')
 export const generateContractFromSourcing = (sourcingId: number, templateId: number, supplierId: number, contractName: string) =>
   api.post(`/contracts/generate-from-sourcing/${sourcingId}?template_id=${templateId}&supplier_id=${supplierId}&contract_name=${encodeURIComponent(contractName)}`)
 
@@ -427,31 +424,14 @@ export const getStatement = (id: number) =>
 export const createStatement = (data: {
   statement_no?: string
   supplier_id: number
-  settlement_period?: string
   period_start: string
   period_end: string
   total_amount: number
-  receipt_ids?: number[]
   remarks?: string
-}, submit?: boolean) =>
-  api.post('/financial/statements/', data, { params: { submit: submit ?? false } })
-
-export const updateStatement = (id: number, data: {
-  supplier_id: number
-  settlement_period?: string
-  period_start: string
-  period_end: string
-  total_amount: number
-  receipt_ids?: number[]
-  remarks?: string
-}, submit?: boolean) =>
-  api.put(`/financial/statements/${id}`, data, { params: { submit: submit ?? false } })
-
-export const buyerAuditStatement = (id: number, body: { action: 'approve' | 'reject'; auditor?: string; message?: string }) =>
-  api.post(`/financial/statements/${id}/buyer-audit`, body)
+}) => api.post('/financial/statements/', data)
 
 export const confirmStatement = (id: number, confirmed_by?: string) =>
-  api.post(`/financial/statements/${id}/confirm`, {}, { params: { confirmed_by: confirmed_by || '采购员' } })
+  api.post(`/financial/statements/${id}/confirm?confirmed_by=${confirmed_by || ''}`)
 
 export const getStatementStats = () =>
   api.get('/financial/statements/stats/summary')
@@ -506,62 +486,39 @@ export const getPaymentStats = () =>
 
 // ============ 预测与订单执行 API (Phase 3) ============
 
-// US-301 / US-301-2
-export const getForecasts = (params?: { status?: string; supplier_id?: number }) =>
-  api.get('/collaboration/forecasts', { params })
+// US-301: 采购预测 (模拟 ERP 同步数据)
+export const getForecasts = (params?: { status?: string; keyword?: string }) =>
+  api.get('/purchase-orders/', { params: { view: 'forecast', ...params } }).catch(() => [])
 
-export const createForecast = (data: {
-  supplier_id: number
-  forecast_period: string
-  period_start: string
-  period_end: string
-  items_data?: Record<string, unknown>[]
-}) => api.post('/collaboration/forecasts', data)
-
-export const publishForecast = (id: number) =>
-  api.post(`/collaboration/forecasts/${id}/publish`)
-
-// US-302
+// US-302: 供应商产能响应
 export const submitCapacityResponse = (forecastId: number, data: {
   supplier_id: number
-  response_data: Record<string, unknown>[]
-  risk_summary?: string
-}) => api.post(`/collaboration/forecasts/${forecastId}/responses`, data)
+  capacity_quantity: number
+  delivery_commitment: string
+  risk_notes?: string
+}) => api.post(`/purchase-orders/${forecastId}/capacity-response`, data)
 
-export const getForecastResponses = (forecastId: number) =>
-  api.get(`/collaboration/forecasts/${forecastId}/responses`)
+// US-303: 采购订单 - 供应商确认/拒绝
+export const confirmOrder = (id: number, supplierId: number) =>
+  api.post(`/supplier-portal/orders/${id}/confirm?supplier_id=${supplierId}`, { action: 'confirm' })
 
-// US-303
-export const confirmOrder = (id: number) =>
-  api.post(`/purchase-orders/${id}/supplier-confirm`)
+export const rejectOrder = (id: number, supplierId: number, reason: string) =>
+  api.post(`/supplier-portal/orders/${id}/confirm?supplier_id=${supplierId}`, { action: 'reject', rejection_reason: reason })
 
-export const rejectOrder = (id: number, reason: string) =>
-  api.post(`/purchase-orders/${id}/supplier-reject`, {}, { params: { reason } })
+// US-305: 要货计划 (模拟 ERP 同步)
+export const getDeliveryPlans = (params?: { status?: string }) =>
+  api.get('/purchase-orders/', { params: { view: 'delivery-plan', ...params } }).catch(() => [])
 
-export const objectionOrder = (id: number, note: string) =>
-  api.post(`/purchase-orders/${id}/supplier-objection`, {}, { params: { note } })
-
-// US-305 / US-306
-export const getDeliveryPlans = (params?: { supplier_id?: number; po_id?: number }) =>
-  api.get('/collaboration/delivery-schedules', { params })
-
-export const createDeliveryPlan = (data: {
-  po_id: number
-  supplier_id: number
-  schedule_type?: string
-  required_date: string
-  items_data?: Record<string, unknown>[]
-}) => api.post('/collaboration/delivery-schedules', data)
-
+// US-306: 供应商确认要货计划
 export const confirmDeliveryPlan = (planId: number, data: {
   supplier_id: number
   confirmed: boolean
   adjustment_notes?: string
-}) => api.post(`/collaboration/delivery-schedules/${planId}/supplier-confirm`, data)
+}) => api.post(`/purchase-orders/${planId}/confirm-delivery`, data)
 
-// US-307~309 ASN / 运单
+// US-307: ASN / 送货计划
 export const getASNList = (params?: { status?: string; supplier_id?: number }) =>
-  api.get('/logistics/shipment-notes/', { params })
+  api.get('/logistics/shipment-notes/', { params: { ...params, view: 'asn' } })
 
 export const createASN = (data: {
   purchase_order_id: number
@@ -573,23 +530,19 @@ export const createASN = (data: {
   driver_phone?: string
   expected_arrival?: string
   shipping_address?: string
-  receiving_warehouse?: string
   total_quantity: number
-  items?: { material_id: number; material_name: string; quantity: number; unit: string; batch_no?: string }[]
+  items?: { material_name: string; quantity: number; unit: string }[]
 }) => api.post('/logistics/shipment-notes/', data)
 
-export const submitASN = (id: number) =>
-  api.post(`/logistics/shipment-notes/${id}/submit`)
-
-export const updateASN = (id: number, data: Record<string, unknown>) =>
+export const updateASN = (id: number, data: Record<string, any>) =>
   api.put(`/logistics/shipment-notes/${id}`, data)
 
-// US-308
+// US-308: 采购方确认送货计划
 export const approveASN = (id: number) =>
   api.post(`/logistics/shipment-notes/${id}/approve`)
 
 export const rejectASN = (id: number, reason: string) =>
-  api.post(`/logistics/shipment-notes/${id}/reject`, {}, { params: { reason } })
+  api.post(`/logistics/shipment-notes/${id}/reject?reason=${encodeURIComponent(reason)}`)
 
 // US-309: 装箱单与批次
 export const getPackingLists = (asnId: number) =>
@@ -613,21 +566,11 @@ export const addStatementComment = (id: number, data: { comment: string; author:
 
 // US-404: 三单匹配与发票审批
 export const threeWayMatch = (invoiceId: number) =>
-  api.get(`/financial/invoices/${invoiceId}/three-way-match`)
+  api.get(`/financial/invoices/${invoiceId}/three-way-match`).catch(() => ({ matched: false }))
 
-export const approveInvoice = (id: number, auditor?: string) =>
-  api.post(`/financial/invoices/${id}/approve`, {}, { params: { auditor: auditor || '财务' } })
+export const approveInvoice = (id: number) =>
+  api.post(`/financial/invoices/${id}/approve`)
 
 export const rejectInvoice = (id: number, reason: string) =>
-  api.post(`/financial/invoices/${id}/reject`, {}, { params: { reason } })
-
-export const resubmitInvoice = (id: number, data: {
-  statement_id?: number
-  supplier_id: number
-  amount: number
-  tax_amount: number
-  invoice_type?: string
-  invoice_date?: string
-  remarks?: string
-}) => api.post(`/financial/invoices/${id}/resubmit`, data)
+  api.post(`/financial/invoices/${id}/reject?reason=${encodeURIComponent(reason)}`)
 

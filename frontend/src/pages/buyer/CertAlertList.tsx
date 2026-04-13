@@ -31,7 +31,7 @@ const CertAlertList: React.FC = () => {
 
   const handleResolve = async (id: number) => {
     try {
-      await resolveAlert(id, { resolution_note: '已处理' })
+      await resolveAlert(id)
       message.success('预警已处理')
       fetchData()
     } catch { message.error('处理失败') }
