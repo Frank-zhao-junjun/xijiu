@@ -21,9 +21,11 @@ router = APIRouter(prefix="/financial", tags=["财务管理"])
 class SettlementStatementCreate(BaseModel):
     statement_no: Optional[str] = None
     supplier_id: int
+    settlement_period: Optional[str] = None  # 如 "2026年4月"，不传则自动生成
     period_start: str  # 接受 "YYYY-MM-DD" 或 datetime 字符串
     period_end: str
     total_amount: float
+    receipt_ids: Optional[List[int]] = None
     remarks: Optional[str] = None
 
 
@@ -162,9 +164,13 @@ async def create_statement(
         period_start = datetime.strptime(data.period_start[:10], "%Y-%m-%d")
         period_end = datetime.strptime(data.period_end[:10], "%Y-%m-%d")
     
+    # 自动生成结算期间描述
+    settlement_period = data.settlement_period or f"{period_start.strftime('%Y年%m月')}"
+    
     statement = SettlementStatement(
         statement_no=statement_no,
         supplier_id=data.supplier_id,
+        settlement_period=settlement_period,
         period_start=period_start,
         period_end=period_end,
         total_amount=data.total_amount,
