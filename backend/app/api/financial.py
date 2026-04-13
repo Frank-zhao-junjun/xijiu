@@ -1,16 +1,17 @@
 """财务管理 API - 结算单/发票/付款"""
+import json
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, desc, or_
 from sqlalchemy.orm import selectinload
 from datetime import datetime, timedelta
 from typing import Optional, List
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.core.database import get_db
 from app.models.supply_chain import (
     SettlementStatement, Invoice, Payment,
-    Supplier, PurchaseOrder, Receipt
+    Supplier, PurchaseOrder, PurchaseOrderItem, Receipt
 )
 
 router = APIRouter(prefix="/financial", tags=["财务管理"])
@@ -21,9 +22,11 @@ router = APIRouter(prefix="/financial", tags=["财务管理"])
 class SettlementStatementCreate(BaseModel):
     statement_no: Optional[str] = None
     supplier_id: int
+    settlement_period: Optional[str] = None
     period_start: datetime
     period_end: datetime
     total_amount: float
+    receipt_ids: Optional[List[int]] = None
     remarks: Optional[str] = None
 
 
@@ -145,21 +148,38 @@ async def get_statement(
     return _format_statement(statement)
 
 
+class StatementAuditBody(BaseModel):
+    action: str = Field(..., pattern="^(approve|reject)$")
+    auditor: str = "采购审核"
+    message: Optional[str] = None
+
+
+class InvoiceAuditBody(BaseModel):
+    action: str = Field(..., pattern="^(approve|reject)$")
+    auditor: str = "财务审核"
+    reason: Optional[str] = None
+
+
 @router.post("/statements/", response_model=SettlementStatementResponse)
 async def create_statement(
     data: SettlementStatementCreate,
-    db: AsyncSession = Depends(get_db)
+    submit: bool = Query(False, description="true=供应商提交待审核 US-401-1"),
+    db: AsyncSession = Depends(get_db),
 ):
-    """创建结算单（采购方发起对账）"""
+    """创建结算单；submit=true 时进入待采购审核"""
     statement_no = data.statement_no or f"SS{datetime.now().strftime('%Y%m%d%H%M%S')}"
-    
+    period_label = data.settlement_period or data.period_start.strftime("%Y年%m月")
+    rid = json.dumps(data.receipt_ids or [], ensure_ascii=False)
+
     statement = SettlementStatement(
         statement_no=statement_no,
         supplier_id=data.supplier_id,
+        settlement_period=period_label,
         period_start=data.period_start,
         period_end=data.period_end,
+        receipt_ids=rid,
         total_amount=data.total_amount,
-        status="draft",
+        status="pending_audit" if submit else "draft",
         remarks=data.remarks,
     )
     db.add(statement)
@@ -181,20 +201,117 @@ async def confirm_statement(
     confirmed_by: str = Query("采购员"),
     db: AsyncSession = Depends(get_db)
 ):
-    """供应商确认结算单"""
+    """供应商对已对账结果的确认（补充场景）"""
     result = await db.execute(
         select(SettlementStatement).where(SettlementStatement.id == statement_id)
     )
     statement = result.scalar_one_or_none()
     if not statement:
         raise HTTPException(status_code=404, detail="结算单不存在")
-    
+
     statement.status = "confirmed"
     statement.confirmed_at = datetime.utcnow()
     statement.confirmed_by = confirmed_by
     await db.commit()
-    
+
     return {"success": True, "message": "结算单已确认"}
+
+
+@router.post("/statements/{statement_id}/buyer-audit", response_model=SettlementStatementResponse)
+async def buyer_audit_statement(
+    statement_id: int,
+    body: StatementAuditBody,
+    db: AsyncSession = Depends(get_db),
+):
+    """US-401-2 / US-402-2：采购方批准或拒绝结算单"""
+    result = await db.execute(
+        select(SettlementStatement).options(selectinload(SettlementStatement.supplier)).where(
+            SettlementStatement.id == statement_id
+        )
+    )
+    statement = result.scalar_one_or_none()
+    if not statement:
+        raise HTTPException(status_code=404, detail="结算单不存在")
+    if body.action == "approve" and statement.status != "pending_audit":
+        raise HTTPException(status_code=400, detail="仅待审核状态可批准")
+    if body.action == "reject" and statement.status not in ("pending_audit", "draft"):
+        raise HTTPException(status_code=400, detail="当前状态不可拒绝")
+
+    if body.action == "approve":
+        statement.status = "confirmed"
+        statement.audited_at = datetime.utcnow()
+        statement.dispute_reason = None
+        extra = f"\n[采购批准 {body.auditor}] {body.message or ''}"
+        statement.remarks = (statement.remarks or "") + extra
+    else:
+        statement.status = "draft"
+        statement.dispute_reason = body.message or "审核拒绝"
+        extra = f"\n[采购拒绝 {body.auditor}] {body.message or ''}"
+        statement.remarks = (statement.remarks or "") + extra
+
+    await db.commit()
+    r2 = await db.execute(
+        select(SettlementStatement)
+        .options(selectinload(SettlementStatement.supplier))
+        .where(SettlementStatement.id == statement_id)
+    )
+    return _format_statement(r2.scalar_one())
+
+
+@router.put("/statements/{statement_id}", response_model=SettlementStatementResponse)
+async def update_statement(
+    statement_id: int,
+    data: SettlementStatementCreate,
+    submit: bool = Query(False, description="修改后再次提交审核 US-402-1"),
+    db: AsyncSession = Depends(get_db),
+):
+    """US-402-1：供应商按意见修订结算单"""
+    result = await db.execute(
+        select(SettlementStatement).options(selectinload(SettlementStatement.supplier)).where(
+            SettlementStatement.id == statement_id
+        )
+    )
+    statement = result.scalar_one_or_none()
+    if not statement:
+        raise HTTPException(status_code=404, detail="结算单不存在")
+    if statement.supplier_id != data.supplier_id:
+        raise HTTPException(status_code=400, detail="供应商不匹配")
+
+    statement.period_start = data.period_start
+    statement.period_end = data.period_end
+    statement.total_amount = data.total_amount
+    if data.settlement_period:
+        statement.settlement_period = data.settlement_period
+    if data.receipt_ids is not None:
+        statement.receipt_ids = json.dumps(data.receipt_ids, ensure_ascii=False)
+    if data.remarks is not None:
+        statement.remarks = data.remarks
+    statement.dispute_reason = None
+    statement.status = "pending_audit" if submit else "draft"
+    await db.commit()
+    r2 = await db.execute(
+        select(SettlementStatement)
+        .options(selectinload(SettlementStatement.supplier))
+        .where(SettlementStatement.id == statement_id)
+    )
+    return _format_statement(r2.scalar_one())
+
+
+@router.post("/statements/{statement_id}/comments")
+async def add_statement_comment(
+    statement_id: int,
+    comment: str = Query(...),
+    author: str = Query("协作方"),
+    db: AsyncSession = Depends(get_db),
+):
+    """结算单留言"""
+    result = await db.execute(select(SettlementStatement).where(SettlementStatement.id == statement_id))
+    statement = result.scalar_one_or_none()
+    if not statement:
+        raise HTTPException(status_code=404, detail="结算单不存在")
+    statement.remarks = (statement.remarks or "") + f"\n[{author}] {comment}"
+    await db.commit()
+    return {"success": True}
 
 
 @router.get("/statements/stats/summary")
@@ -308,6 +425,125 @@ async def create_invoice(
         ).where(Invoice.id == invoice.id)
     )
     return _format_invoice(result.scalar_one())
+
+
+@router.get("/invoices/{invoice_id}/three-way-match")
+async def invoice_three_way_match(invoice_id: int, db: AsyncSession = Depends(get_db)):
+    """US-403-2：三单匹配（订单-收货-发票）摘要"""
+    inv_r = await db.execute(select(Invoice).where(Invoice.id == invoice_id))
+    inv = inv_r.scalar_one_or_none()
+    if not inv:
+        raise HTTPException(status_code=404, detail="发票不存在")
+
+    inv_total = float(inv.amount or 0) + float(inv.tax_amount or 0)
+    po_total = None
+    receipt_total = None
+    detail = {"invoice_total": inv_total, "statement_total": None, "order_total": None, "receipt_total": None}
+
+    if inv.statement_id:
+        st_r = await db.execute(select(SettlementStatement).where(SettlementStatement.id == inv.statement_id))
+        st = st_r.scalar_one_or_none()
+        if st:
+            detail["statement_total"] = float(st.total_amount or 0)
+            try:
+                rids = json.loads(st.receipt_ids or "[]")
+            except json.JSONDecodeError:
+                rids = []
+            if rids:
+                rc_r = await db.execute(select(Receipt).where(Receipt.id.in_(rids)))
+                rc_list = rc_r.scalars().all()
+                receipt_total = sum(float(x.total_quantity or 0) for x in rc_list)
+                detail["receipt_total"] = receipt_total
+                detail["receipt_count"] = len(rc_list)
+            # 关联订单金额：取第一条收货的采购订单
+            if rids:
+                first = await db.execute(select(Receipt).where(Receipt.id == rids[0]))
+                rc0 = first.scalar_one_or_none()
+                if rc0 and rc0.purchase_order_id:
+                    po_r = await db.execute(
+                        select(PurchaseOrder).options(selectinload(PurchaseOrder.items)).where(
+                            PurchaseOrder.id == rc0.purchase_order_id
+                        )
+                    )
+                    po = po_r.scalar_one_or_none()
+                    if po:
+                        po_total = float(po.total_amount or 0)
+                        detail["order_total"] = po_total
+
+    matched = True
+    reasons = []
+    if detail["statement_total"] is not None and abs(detail["statement_total"] - inv_total) > 0.02:
+        matched = False
+        reasons.append("发票金额与结算单不一致")
+    if po_total is not None and detail["statement_total"] is not None and abs(po_total - detail["statement_total"]) > 0.02:
+        matched = False
+        reasons.append("结算单与订单金额差异")
+
+    return {"matched": matched, "detail": detail, "reasons": reasons}
+
+
+@router.post("/invoices/{invoice_id}/approve")
+async def approve_invoice(
+    invoice_id: int,
+    auditor: str = Query("财务"),
+    db: AsyncSession = Depends(get_db),
+):
+    """US-403-2：批准发票"""
+    r = await db.execute(select(Invoice).where(Invoice.id == invoice_id))
+    inv = r.scalar_one_or_none()
+    if not inv:
+        raise HTTPException(status_code=404, detail="发票不存在")
+    inv.status = "approved"
+    inv.approved_at = datetime.utcnow()
+    inv.rejection_reason = None
+    await db.commit()
+    return {"success": True, "message": f"已由{auditor}批准"}
+
+
+@router.post("/invoices/{invoice_id}/reject")
+async def reject_invoice(
+    invoice_id: int,
+    reason: str = Query(...),
+    db: AsyncSession = Depends(get_db),
+):
+    """US-403-2 / US-404：驳回发票"""
+    r = await db.execute(select(Invoice).where(Invoice.id == invoice_id))
+    inv = r.scalar_one_or_none()
+    if not inv:
+        raise HTTPException(status_code=404, detail="发票不存在")
+    inv.status = "rejected"
+    inv.rejection_reason = reason
+    await db.commit()
+    return {"success": True}
+
+
+@router.post("/invoices/{invoice_id}/resubmit", response_model=InvoiceResponse)
+async def resubmit_invoice(
+    invoice_id: int,
+    data: InvoiceCreate,
+    db: AsyncSession = Depends(get_db),
+):
+    """US-404-1：供应商按驳回原因修订并重提（更新同一张发票记录）"""
+    r = await db.execute(select(Invoice).options(selectinload(Invoice.supplier)).where(Invoice.id == invoice_id))
+    inv = r.scalar_one_or_none()
+    if not inv:
+        raise HTTPException(status_code=404, detail="发票不存在")
+    if data.supplier_id != inv.supplier_id:
+        raise HTTPException(status_code=400, detail="供应商不匹配")
+    inv.amount = data.amount
+    inv.tax_amount = data.tax_amount
+    inv.invoice_type = data.invoice_type
+    inv.invoice_date = data.invoice_date or datetime.utcnow()
+    inv.remarks = data.remarks
+    inv.status = "pending_approval"
+    inv.rejection_reason = None
+    if data.statement_id is not None:
+        inv.statement_id = data.statement_id
+    await db.commit()
+    r2 = await db.execute(
+        select(Invoice).options(selectinload(Invoice.supplier)).where(Invoice.id == invoice_id)
+    )
+    return _format_invoice(r2.scalar_one())
 
 
 @router.get("/invoices/stats/summary")

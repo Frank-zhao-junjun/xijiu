@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Card, Table, Tag, Descriptions, Modal, Button, Space, Statistic, Row, Col } from 'antd'
 import { EyeOutlined, LineChartOutlined } from '@ant-design/icons'
-import { getOrders } from '../../api'
+import { getForecasts } from '../../api'
 
 const ForecastList: React.FC = () => {
   const [data, setData] = useState<any[]>([])
@@ -12,9 +12,9 @@ const ForecastList: React.FC = () => {
   const fetchData = async () => {
     setLoading(true)
     try {
-      const res = await getOrders() as any
-      // 使用采购订单模拟预测数据（ERP同步后展示）
-      setData(Array.isArray(res) ? res : [])
+      const res = await getForecasts()
+      const rows = (res as any)?.data ?? res
+      setData(Array.isArray(rows) ? rows : [])
     } catch { setData([]) }
     setLoading(false)
   }
@@ -29,10 +29,21 @@ const ForecastList: React.FC = () => {
   }
 
   const columns = [
-    { title: '预测编号', dataIndex: 'order_no', key: 'order_no', render: (v: string) => v || '-' },
-    { title: '物料/品类', dataIndex: 'material_name', key: 'material_name', render: (v: string) => v || '高粱/小麦' },
-    { title: '预测数量', dataIndex: 'quantity', key: 'quantity', render: (v: number) => v ? `${v} 吨` : '-' },
-    { title: '需求月份', dataIndex: 'expected_date', key: 'expected_date', render: (v: string) => v ? new Date(v).toLocaleDateString() : '-' },
+    { title: '预测期间', dataIndex: 'forecast_period', key: 'forecast_period', render: (v: string) => v || '-' },
+    { title: '物料/品类', key: 'items', render: (_: unknown, r: any) => {
+      const items = r.items_data
+      if (Array.isArray(items) && items[0]?.material_name) return items[0].material_name
+      return '—'
+    }},
+    { title: '预测数量', key: 'qty', render: (_: unknown, r: any) => {
+      const items = r.items_data
+      if (!Array.isArray(items) || !items.length) return '—'
+      const q = items.reduce((s: number, x: any) => s + (Number(x.quantity) || 0), 0)
+      return q ? `${q} 吨` : '—'
+    }},
+    { title: '周期起止', key: 'period', render: (_: unknown, r: any) => (
+      <span>{r.period_start ? new Date(r.period_start).toLocaleDateString() : '—'} ~ {r.period_end ? new Date(r.period_end).toLocaleDateString() : '—'}</span>
+    )},
     { title: '状态', dataIndex: 'status', key: 'status', render: (v: string) => {
       const s = statusMap[v] || { color: 'blue', text: v || '已发布' }
       return <Tag color={s.color}>{s.text}</Tag>
@@ -57,12 +68,11 @@ const ForecastList: React.FC = () => {
       <Modal title="预测详情" open={detailOpen} onCancel={() => setDetailOpen(false)} footer={null} width={600}>
         {detail && (
           <Descriptions bordered column={2} size="small">
-            <Descriptions.Item label="预测编号">{detail.order_no || '-'}</Descriptions.Item>
-            <Descriptions.Item label="状态"><Tag color="blue">{detail.status || '已发布'}</Tag></Descriptions.Item>
-            <Descriptions.Item label="物料">{detail.material_name || '高粱/小麦'}</Descriptions.Item>
-            <Descriptions.Item label="数量">{detail.quantity ? `${detail.quantity} 吨` : '-'}</Descriptions.Item>
-            <Descriptions.Item label="需求日期">{detail.expected_date ? new Date(detail.expected_date).toLocaleDateString() : '-'}</Descriptions.Item>
-            <Descriptions.Item label="数据来源"><Tag color="purple">ERP同步</Tag></Descriptions.Item>
+            <Descriptions.Item label="预测期间">{detail.forecast_period || '-'}</Descriptions.Item>
+            <Descriptions.Item label="状态"><Tag color="blue">{detail.status || '—'}</Tag></Descriptions.Item>
+            <Descriptions.Item label="周期">{detail.period_start ? new Date(detail.period_start).toLocaleDateString() : '—'} ~ {detail.period_end ? new Date(detail.period_end).toLocaleDateString() : '—'}</Descriptions.Item>
+            <Descriptions.Item label="明细" span={2}><pre style={{ margin: 0, fontSize: 12 }}>{JSON.stringify(detail.items_data || [], null, 2)}</pre></Descriptions.Item>
+            <Descriptions.Item label="数据来源"><Tag color="purple">协同发布</Tag></Descriptions.Item>
           </Descriptions>
         )}
       </Modal>

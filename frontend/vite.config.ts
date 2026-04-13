@@ -74,6 +74,10 @@ export default defineConfig({
       '/qualification': {
         target: 'http://localhost:8000',
         changeOrigin: true
+      },
+      '/collaboration': {
+        target: 'http://localhost:8000',
+        changeOrigin: true
       }
     }
   }

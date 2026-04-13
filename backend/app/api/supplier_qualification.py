@@ -74,7 +74,9 @@ async def create_invitation(
         notes=body.notes
     )
     db.add(invitation)
-    await db.flush()
+    await db.commit()
+    await db.refresh(invitation)
+    return invitation
 
 
 @router.post("/cert-alerts/check")
@@ -87,8 +89,6 @@ async def trigger_cert_expiry_check(db: AsyncSession = Depends(get_db)):
     """
     await check_and_create_cert_expiry_alerts(db)
     return {"success": True, "message": "资质到期检查完成"}
-    await db.refresh(invitation)
-    return invitation
 
 
 @router.get("/invitations/{code}/validate", response_model=InvitationValidateResponse)

@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { Card, Table, Tag, Button, Modal, Form, Input, Descriptions, Space, message } from 'antd'
 import { EyeOutlined, CheckCircleOutlined } from '@ant-design/icons'
-import { getOrders, confirmDeliveryPlan } from '../../api'
+import { getDeliveryPlans, confirmDeliveryPlan } from '../../api'
+
+const DEMO_SUPPLIER_ID = 1
 
 const SupplierDeliveryPlan: React.FC = () => {
   const [data, setData] = useState<any[]>([])
@@ -13,8 +15,9 @@ const SupplierDeliveryPlan: React.FC = () => {
   const fetchData = async () => {
     setLoading(true)
     try {
-      const res = await getOrders() as any
-      setData(Array.isArray(res) ? res : [])
+      const res = await getDeliveryPlans({ supplier_id: DEMO_SUPPLIER_ID }) as any
+      const rows = res?.data ?? res
+      setData(Array.isArray(rows) ? rows : [])
     } catch { setData([]) }
     setLoading(false)
   }
@@ -31,7 +34,7 @@ const SupplierDeliveryPlan: React.FC = () => {
     try {
       const values = await form.validateFields()
       await confirmDeliveryPlan(currentItem.id, {
-        supplier_id: 1,
+        supplier_id: currentItem.supplier_id || DEMO_SUPPLIER_ID,
         confirmed: values.confirmed === 'yes',
         adjustment_notes: values.adjustment_notes || '',
       })
@@ -41,9 +44,7 @@ const SupplierDeliveryPlan: React.FC = () => {
       fetchData()
     } catch (e: any) {
       if (e?.errorFields) return
-      message.success('操作完成')
-      setConfirmOpen(false)
-      form.resetFields()
+      message.error(e?.response?.data?.detail || '操作失败')
     }
   }
 
@@ -55,10 +56,9 @@ const SupplierDeliveryPlan: React.FC = () => {
   }
 
   const columns = [
-    { title: '计划编号', dataIndex: 'order_no', key: 'order_no' },
-    { title: '物料', dataIndex: 'material_name', key: 'material_name', render: (v: string) => v || '-' },
-    { title: '数量', dataIndex: 'quantity', key: 'quantity' },
-    { title: '需求日期', dataIndex: 'expected_date', key: 'expected_date', render: (v: string) => v ? new Date(v).toLocaleDateString() : '-' },
+    { title: '计划ID', dataIndex: 'id', key: 'id', width: 80 },
+    { title: '采购订单', dataIndex: 'po_id', key: 'po_id' },
+    { title: '要货日期', dataIndex: 'required_date', key: 'required_date', render: (v: string) => v ? new Date(v).toLocaleDateString() : '-' },
     { title: '状态', dataIndex: 'status', key: 'status', render: (v: string) => {
       const s = statusMap[v] || { color: 'orange', text: '待确认' }
       return <Tag color={s.color}>{s.text}</Tag>
@@ -81,10 +81,9 @@ const SupplierDeliveryPlan: React.FC = () => {
       <Modal title="确认要货计划" open={confirmOpen} onOk={handleSubmit} onCancel={() => { setConfirmOpen(false); form.resetFields() }} width={520}>
         {currentItem && (
           <Descriptions bordered column={1} size="small" style={{ marginBottom: 16 }}>
-            <Descriptions.Item label="计划编号">{currentItem.order_no}</Descriptions.Item>
-            <Descriptions.Item label="物料">{currentItem.material_name || '-'}</Descriptions.Item>
-            <Descriptions.Item label="数量">{currentItem.quantity || '-'}</Descriptions.Item>
-            <Descriptions.Item label="需求日期">{currentItem.expected_date ? new Date(currentItem.expected_date).toLocaleDateString() : '-'}</Descriptions.Item>
+            <Descriptions.Item label="计划ID">{currentItem.id}</Descriptions.Item>
+            <Descriptions.Item label="采购订单">{currentItem.po_id}</Descriptions.Item>
+            <Descriptions.Item label="要货日期">{currentItem.required_date ? new Date(currentItem.required_date).toLocaleDateString() : '-'}</Descriptions.Item>
           </Descriptions>
         )}
         <Form form={form} layout="vertical">

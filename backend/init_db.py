@@ -3,7 +3,7 @@ import asyncio
 import json
 from datetime import datetime, timedelta
 from app.core.database import async_engine, Base, AsyncSessionLocal
-from app.models.supply_chain import (Supplier, Material, Product, PurchaseOrder, PurchaseOrderItem, SalesOrder, ProductionRecord, MaterialUsage, Warehouse, ShipmentNote, ShipmentNoteItem, SupplierInvitation, SupplierRegistration, SupplierCertification, SupplierAlert, QualificationProject, QualificationSubmission, SourcingProject, SourcingInvitation, SourcingBid, SourcingAward, ContractTemplate, Contract, ContractComment, PurchaseForecast, ForecastResponse, DeliverySchedule, ASN, Receipt, ReceiptItem, SettlementStatement, Invoice, Payment, User, Announcement, AnnouncementRead, AnnouncementType)
+from app.models.supply_chain import (Supplier, Material, Product, PurchaseOrder, PurchaseOrderItem, SalesOrder, ProductionRecord, MaterialUsage, Warehouse, ShipmentNote, ShipmentNoteItem, SupplierInvitation, SupplierRegistration, SupplierCertification, SupplierAlert, QualificationProject, QualificationSubmission, SourcingProject, SourcingInvitation, SourcingBid, SourcingAward, ContractTemplate, Contract, ContractComment, PurchaseForecast, ForecastResponse, DeliverySchedule, ForecastStatus, ASN, Receipt, ReceiptItem, SettlementStatement, Invoice, Payment, User, Announcement, AnnouncementRead, AnnouncementType)
 
 async def init_database():
     print("Creating database tables...")
@@ -388,6 +388,46 @@ async def seed_demo_data():
             ),
         ]
         session.add_all(payments)
+
+        # ===== 采购预测 / 要货计划（Phase 3 演示）=====
+        pf = PurchaseForecast(
+            supplier_id=suppliers[0].id,
+            forecast_period="2026年二季度",
+            period_start=datetime(2026, 4, 1),
+            period_end=datetime(2026, 6, 30),
+            items_data=json.dumps(
+                [{"material_name": "红缨子糯高粱", "material_id": materials_list[0].id, "quantity": 100}],
+                ensure_ascii=False,
+            ),
+            status=ForecastStatus.PUBLISHED,
+            published_at=datetime.utcnow(),
+        )
+        session.add(pf)
+        await session.flush()
+        session.add(
+            DeliverySchedule(
+                po_id=po3.id,
+                supplier_id=suppliers[1].id,
+                schedule_type="weekly",
+                required_date=datetime.now() + timedelta(days=7),
+                items_data=json.dumps(
+                    [{"material_name": "优质小麦", "quantity": 20}], ensure_ascii=False
+                ),
+                status="pending",
+            )
+        )
+        session.add(
+            DeliverySchedule(
+                po_id=po2.id,
+                supplier_id=suppliers[0].id,
+                schedule_type="weekly",
+                required_date=datetime.now() + timedelta(days=5),
+                items_data=json.dumps(
+                    [{"material_name": "红缨子糯高粱", "quantity": 15}], ensure_ascii=False
+                ),
+                status="pending",
+            )
+        )
 
         await session.commit()
         print("✅ Demo data added successfully!")

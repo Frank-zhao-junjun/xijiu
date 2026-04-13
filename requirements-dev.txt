@@ -1,0 +1,3 @@
+# 宿主机运行 US 矩阵测试（pytest + httpx）
+pytest>=7.4.0
+httpx>=0.27.0

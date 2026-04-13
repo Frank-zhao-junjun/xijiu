@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { Card, Table, Tag, Button, Modal, Form, Input, InputNumber, Descriptions, Space, message } from 'antd'
 import { EyeOutlined, LineChartOutlined } from '@ant-design/icons'
-import { getOrders } from '../../api'
+import { getForecasts, submitCapacityResponse } from '../../api'
+
+const DEMO_SUPPLIER_ID = 1
 
 const CapacityResponse: React.FC = () => {
   const [data, setData] = useState<any[]>([])
@@ -13,8 +15,9 @@ const CapacityResponse: React.FC = () => {
   const fetchData = async () => {
     setLoading(true)
     try {
-      const res = await getOrders() as any
-      setData(Array.isArray(res) ? res : [])
+      const res = await getForecasts({ supplier_id: DEMO_SUPPLIER_ID, status: 'published' }) as any
+      const rows = res?.data ?? res
+      setData(Array.isArray(rows) ? rows : [])
     } catch { setData([]) }
     setLoading(false)
   }
@@ -27,15 +30,26 @@ const CapacityResponse: React.FC = () => {
   }
 
   const handleSubmit = async () => {
+    if (!currentItem) return
     try {
       const values = await form.validateFields()
+      await submitCapacityResponse(currentItem.id, {
+        supplier_id: DEMO_SUPPLIER_ID,
+        response_data: [
+          {
+            committed_qty: values.capacity_quantity,
+            delivery_commitment: values.delivery_commitment,
+          },
+        ],
+        risk_summary: values.risk_notes || '',
+      })
       message.success('产能响应已提交')
       setResponseOpen(false)
       form.resetFields()
       fetchData()
     } catch (e: any) {
       if (e?.errorFields) return
-      message.error('提交失败')
+      message.error(e?.response?.data?.detail || '提交失败')
     }
   }
 
@@ -47,17 +61,25 @@ const CapacityResponse: React.FC = () => {
   }
 
   const columns = [
-    { title: '预测编号', dataIndex: 'order_no', key: 'order_no' },
-    { title: '物料', dataIndex: 'material_name', key: 'material_name', render: (v: string) => v || '高粱/小麦' },
-    { title: '预测数量', dataIndex: 'quantity', key: 'quantity', render: (v: number) => v ? `${v} 吨` : '-' },
-    { title: '需求日期', dataIndex: 'expected_date', key: 'expected_date', render: (v: string) => v ? new Date(v).toLocaleDateString() : '-' },
+    { title: '预测期间', dataIndex: 'forecast_period', key: 'forecast_period' },
+    { title: '物料', key: 'mat', render: (_: unknown, r: any) => {
+      const it = r.items_data
+      return Array.isArray(it) && it[0]?.material_name ? it[0].material_name : '—'
+    }},
+    { title: '预测数量', key: 'qty', render: (_: unknown, r: any) => {
+      const it = r.items_data
+      if (!Array.isArray(it)) return '—'
+      const q = it.reduce((s: number, x: any) => s + (Number(x.quantity) || 0), 0)
+      return q ? `${q} 吨` : '—'
+    }},
+    { title: '周期', key: 'p', render: (_: unknown, r: any) => `${r.period_start ? new Date(r.period_start).toLocaleDateString() : '—'} ~ ${r.period_end ? new Date(r.period_end).toLocaleDateString() : '—'}` },
     { title: '状态', dataIndex: 'status', key: 'status', render: (v: string) => {
       const s = statusMap[v] || { color: 'orange', text: '待响应' }
       return <Tag color={s.color}>{s.text}</Tag>
     }},
     { title: '操作', key: 'action', render: (_: any, r: any) => (
       <Space>
-        {(r.status === 'pending' || r.status === 'draft') && (
+        {(r.status === 'published') && (
           <Button type="primary" size="small" onClick={() => handleResponse(r)}>提交产能响应</Button>
         )}
       </Space>
@@ -73,9 +95,8 @@ const CapacityResponse: React.FC = () => {
       <Modal title="提交产能响应" open={responseOpen} onOk={handleSubmit} onCancel={() => { setResponseOpen(false); form.resetFields() }} width={520}>
         {currentItem && (
           <Descriptions bordered column={1} size="small" style={{ marginBottom: 16 }}>
-            <Descriptions.Item label="预测编号">{currentItem.order_no}</Descriptions.Item>
-            <Descriptions.Item label="物料">{currentItem.material_name || '高粱/小麦'}</Descriptions.Item>
-            <Descriptions.Item label="预测数量">{currentItem.quantity ? `${currentItem.quantity} 吨` : '-'}</Descriptions.Item>
+            <Descriptions.Item label="预测期间">{currentItem.forecast_period}</Descriptions.Item>
+            <Descriptions.Item label="周期">{currentItem.period_start ? new Date(currentItem.period_start).toLocaleDateString() : '—'} ~ {currentItem.period_end ? new Date(currentItem.period_end).toLocaleDateString() : '—'}</Descriptions.Item>
           </Descriptions>
         )}
         <Form form={form} layout="vertical">
