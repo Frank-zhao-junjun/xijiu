@@ -82,6 +82,63 @@ pnpm build
 node server.mjs
 ```
 
+### Docker 一键启动（推荐验收）
+
+```bash
+# 在仓库根目录执行
+docker compose up -d --build
+
+# 可选：查看服务状态
+docker compose ps
+```
+
+服务就绪后访问：
+- 前端（Nginx）：`http://localhost:3000`
+- 后端 API 文档：`http://localhost:8000/docs`
+- 健康检查：`http://localhost:8000/health`
+
+停止并清理：
+
+```bash
+docker compose down
+```
+
+如需全新数据重测（删除卷）：
+
+```bash
+docker compose down -v
+```
+
+### 全量 US 测试（66 条 + 健康检查）
+
+> 建议在 Docker 启动后执行；测试需串行运行（不要使用 xdist）。
+
+PowerShell：
+
+```powershell
+# 通过 Nginx 入口测试（推荐）
+.\scripts\run-us-tests.ps1 -ThroughNginx
+
+# 全新环境（先重建容器与数据）后测试
+.\scripts\run-us-tests.ps1 -ThroughNginx -Fresh
+```
+
+Bash：
+
+```bash
+# 通过 Nginx 入口测试（推荐）
+./scripts/run-us-tests.sh --nginx
+
+# 全新环境（先重建容器与数据）后测试
+./scripts/run-us-tests.sh --nginx --fresh
+```
+
+手动指定 API 地址：
+
+```bash
+XIJIU_API_BASE=http://localhost:3000 pytest tests/api/test_user_stories_smoke.py -q
+```
+
 ## 访问地址
 
 | 服务 | 地址 |
