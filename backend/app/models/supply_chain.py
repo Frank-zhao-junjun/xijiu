@@ -470,6 +470,8 @@ class ContractTemplate(Base):
 
 class ContractStatus(str, enum.Enum):
     DRAFT = "draft"
+    RECEIVED = "received"               # 草案已查收
+    PENDING_FEEDBACK = "pending_feedback"  # 待反馈
     PENDING_SIGN = "pending_sign"       # 待签署
     SIGNED = "signed"                   # 已签署
     ACTIVE = "active"                   # 已生效

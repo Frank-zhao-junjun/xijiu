@@ -1,0 +1,320 @@
+=== US-403: 发票创建与上传 ===
+✅ passes 状态已补齐，发票创建与上传主链推进完成。
+
+=== US-405: 付款状态发布与查询 ===
+✅ passes 状态已补齐，付款状态发布与查询主链推进完成。
+
+
+# 经验日志 - 供应商全链路协同平台
+=== US-404: 采购方三单匹配与发票审批 ===
+✅ passes 状态已补齐，三单匹配与发票审批主链推进完成。
+
+
+=== US-403: 发票创建与上传 ===
+✅ passes 状态已补齐，发票创建与上传主链推进完成。
+
+## Phase 0: 需求分析与架构规划
+
+=== 项目启动 ===
+- 项目名称: 白酒供应链协同平台 - 供应商全链路协同
+- 分5大阶段: 供应商准入 / 寻源合同 / 订单执行 / 财务结算
+- 当前Phase: Phase 1 (供应商准入)
+- 已有资产: React前端(Ant Design)、FastAPI后端、SQLite数据库
+
+=== 架构决策 ===
+- 采用前后端分离架构
+  - 前端: React + Ant Design + Vite (现有)
+  - 后端: FastAPI + SQLAlchemy + SQLite (现有)
+  - 协同API: /api/supplier-portal/*, /api/qualification/*, /api/sourcing/*, /api/forecast/*, /api/asn/*, /api/settlement/*, /api/invoices/*, /api/payments/*
+- 数据库: 复用现有SQLite，新增协同相关表
+- 认证: 供应商portal使用独立token认证(简化版)
+
+=== 技术债务/风险 ===
+- 现有数据库需新增大量协同相关表
+- 需要新增API路由: 约15个新路由文件
+- 需要新增前端页面: 供应商portal、评审管理、寻源管理等
+
+---
+
+## Phase 1: US-101~US-108 (供应商准入)
+
+=== US-101: 供应商注册邀请 ===
+- 核心表: supplier_invitations (invitation_code PK, supplier_name, email, status, expiry_date, created_by)
+- API: POST /api/supplier-portal/invitations, GET /api/supplier-portal/invitations/{code}/validate
+- 邀请码格式: 8位随机字符串
+- 状态枚举: pending/accepted/expired
+
+=== US-102: 供应商自助注册 ===
+- 注册信息独立表: supplier_registrations (独立于主suppliers表)
+- 审核通过后写入suppliers表
+
+=== US-101 实施经验 ===
+- 新增模型: SupplierInvitation, SupplierRegistration, SupplierCertification, SupplierAlert, User
+- 新增API路由: /api/supplier-portal/invitations, /register, /pending-audit, /supplier-alerts
+- async SQLAlchemy 注意点: join/relationship访问需用selectinload()预加载
+- 邀请码格式: 8位UUID hex段
+- 状态枚举: InvitationStatus(PENDING/ACCEPTED/EXPIRED/CANCELLED)
+- 注册审核通过后: 自动创建supplier主数据记录
+- 资质预警: 使用days_before_expiry字段触发预警消息
+- UUID: python的uuid.uuid4().hex[:8].upper()
+
+---
+
+## 通用模式
+
+=== 数据模型命名 ===
+- 协同相关表统一前缀: supplier_*, qualification_*, sourcing_*, forecast_*, asn_*, settlement_*
+- 主数据表: suppliers, materials, products (已有)
+
+=== API路由分组 ===
+- /api/supplier-portal/* - 供应商门户API
+- /api/qualification/* - 资格评审API
+- /api/sourcing/* - 寻源API
+- /api/forecast/* - 预测API
+- /api/asn/* - ASN/送货API
+- /api/settlement/* - 结算API
+- /api/invoices/* - 发票API
+- /api/payments/* - 付款API
+
+=== Phase 1 完成清单 (US-101~US-108) ===
+✅ US-101 供应商注册邀请
+✅ US-102 供应商自助注册  
+✅ US-103 注册状态查询与审核
+✅ US-104 资格评审项目创建
+✅ US-105 供应商填写问卷
+✅ US-106 采购方评审
+✅ US-107 资格审批通过/驳回
+✅ US-108 资质预警与到期检查
+
+=== Phase 2 主链推进日志 ===
+
+=== US-204: 采购方在线开标比价（SRM功能，仅保留菜单） ===
+- 本功能为采购方SRM系统能力，本系统仅保留菜单入口，不做具体功能实现
+- API 路由 /sourcing/projects/{id}/comparison 仅返回“功能由SRM系统实现”提示，不做实际比价处理
+- 经验：
+  - 采购端菜单入口可跳转或提示“请前往SRM系统完成开标比价”
+  - 保持接口兼容性，便于后续 SRM 系统集成
+  - 相关数据模型（SourcingBid、SourcingAward）仅做占位，不在本系统内落地业务逻辑
+
+=== US-205: 中标/落标通知发布 ===
+- 采购侧寻源系统或内部系统同步授标结果到本系统
+- 已实现 API: POST /api/sourcing/projects/{project_id}/award 发布授标结果，并为所有已开标供应商生成授标/落标记录
+- 经验：
+  - 项目状态同步为 AWARDED，中标结果可用于后续合同草案生成
+  - 未中标供应商也保留落标记录，支持后续通知与排名展示
+  - 采购侧授标结果以同步为准，本系统负责消费并展示通知结果
+
+=== US-206: 合同草案发布 ===
+- 已实现接口: GET /api/contracts/drafts/{contract_id} 供应商查看合同草案
+- 已实现接口: POST /api/contracts/drafts/{contract_id}/acknowledge 供应商标记合同草案已查收
+- 经验：
+  - 草案状态从 draft 变为 received，后续可继续反馈或签署流程
+  - 该接口兼容合同系统同步合同草案的场景，供应商只需查收即可进入后续环节
+
+=== US-207: 合同修改意见反馈 ===
+=== US-403: 发票创建与上传 ===
+- 已实现接口: POST /api/invoices 创建发票记录，支持字段：发票号、类型、金额、税率、开票日期、影像（image_url）、关联结算单 statement_id
+- 支持上传发票影像（PDF/图片），保存 image_url 字段
+- 发票状态流转：开票中/待采购方审核/已通过/已拒绝，自动推送发票信息给采购方
+- 经验：
+  - 发票需强关联结算单，金额、税率与结算单自动校验
+  - 影像文件建议存储为对象存储 URL，数据库仅保存 image_url
+  - 状态流转与采购方审批联动，审批历史建议结构化存储
+  - 文件上传接口建议单独实现，前端通过 multipart/form-data 上传，后端返回 image_url
+  - 发票信息推送采购方后，自动进入三单匹配流程
+  - 发票表结构建议：invoice_id, statement_id, invoice_number, amount, tax_rate, image_url, status, created_at
+=== US-403: 发票创建与上传 ===
+- 已实现接口: POST /api/invoices 创建发票记录，支持字段：发票号、类型、金额、税率、开票日期、影像（image_url）、关联结算单 statement_id
+- 支持上传发票影像（PDF/图片），保存 image_url 字段
+- 发票状态流转：开票中/待采购方审核/已通过/已拒绝，自动推送发票信息给采购方
+- 经验：
+  - 发票需强关联结算单，金额、税率与结算单自动校验
+  - 影像文件建议存储为对象存储 URL，数据库仅保存 image_url
+  - 状态流转与采购方审批联动，审批历史建议结构化存储
+  - 文件上传接口建议单独实现，前端通过 multipart/form-data 上传，后端返回 image_url
+  - 发票信息推送采购方后，自动进入三单匹配流程
+  - 发票表结构建议：invoice_id, statement_id, invoice_number, amount, tax_rate, image_url, status, created_at
+# ...existing code...
+# ...existing code...
+# ...existing code...
+# ...existing code...
+# ...existing code...
+# ...existing code...
+# ...existing code...
+# ...existing code...
+# ...existing code...
+# ...existing code...
+# ...existing code...
+# ...existing code...
+=== US-402: 采购方审核结算单 ===
+- 已实现接口: POST /api/settlement/statements/{id}/approve 采购方批准结算单
+- 已实现接口: POST /api/settlement/statements/{id}/reject 采购方拒绝结算单
+- 已实现接口: POST /api/settlement/statements/{id}/comment 采购方留言沟通差异
+- 供应商可根据意见修订结算单，确认后形成无争议应付账款
+- 经验：
+  - 结算单审核需与收货明细、应付数据联动，审批后状态自动流转
+  - 留言与异议建议结构化存储，便于追溯与财务对账
+  - 审核历史建议分表存储，便于合规与统计分析
+- 已实现接口: POST /api/settlement/statements 创建结算单
+- 结算字段: 结算期间、供应商信息、应收金额、物料明细对账，金额自动汇总
+- 状态: 待采购方审核 / 已确认 / 有异议 / 已关闭，提交后自动推送采购方
+- 经验：
+  - 结算单需基于已收货且未结算的收货单自动汇总，支持人工调整
+  - 结算单状态流转与采购方审核、异议处理联动
+  - 结算单数据建议分表存储，便于追溯与财务对账
+- 已实现接口: POST /api/receipts 发布收货单，POST /api/quality-inspections 发布质检结果
+- 收货字段: 实际到货数量、到货时间、验收结果，验收结果枚举: 合格/不合格/特采
+- 不合格详情: 数量、原因、处理方式，自动通知供应商
+- 供应商可查询收货状态和检验结果，收货单关联采购订单、ASN、质检单
+- 经验：
+  - 收货与验收结果需与采购订单、ASN、质检单全链路关联，便于追溯
+  - 不合格处理建议结构化存储，便于统计与改进
+  - 状态变更自动通知供应商，提升协同效率
+- 已实现接口: POST /api/asn/{id}/packing-list 供应商提交装箱单
+- 装箱单字段: 箱号、物料明细、批号/序列号、数量、毛重/净重
+- 批次信息: 生产日期、有效期、产地，支持上传条码清单
+- 采购方可批准、拒绝或修改装箱单与批次信息，审批结果通知供应商
+- 收货后批次信息自动关联入库记录，满足行业溯源要求
+- 经验：
+  - 装箱单与批次信息需与ASN、入库单关联，便于全链路追溯
+  - 条码清单建议支持批量上传，提升效率
+  - 审批历史建议结构化存储，便于追溯与合规
+- 已实现接口: POST /api/asn/{id}/approve 采购方批准送货计划
+- 已实现接口: POST /api/asn/{id}/reject 采购方拒绝送货计划
+- 已实现接口: POST /api/asn/{id}/modify 采购方修改送货安排
+- 记录批准/拒绝/修改历史，ASN状态流转与后续收货联动
+- 经验：
+  - 采购方审批后，ASN状态自动流转，供应商需确认最终送货安排
+  - 审批历史建议结构化存储，便于追溯与合规审计
+  - ASN确认是收货准备的必要前提，需与后续入库、验收等环节联动
+- 已实现接口: POST /api/asn 创建ASN（提前发货通知）
+- 已实现接口: GET /api/asn 供应商/采购方查看ASN列表
+- ASN状态: 待确认 / 已确认 / 已到货，支持多次修改
+- 经验：
+  - ASN需关联已确认要货计划，自动生成ASN编号
+  - ASN状态流转与收货、入库等后续环节联动
+  - ASN数据建议分表存储，便于追溯与大数据量处理
+- 已实现接口: POST /api/supplier-portal/delivery-schedules/{id}/confirm 供应商确认要货计划
+- 已实现接口: POST /api/supplier-portal/delivery-schedules/{id}/suggest 供应商建议调整
+- 调整建议字段: 建议到货日期、调整原因，采购侧处理后同步最终结果
+- 经验：
+  - 供应商确认/建议调整后，需采购侧处理并同步最终送货承诺
+  - 调整建议不可单方面生效，需双方协商一致
+  - 建议调整与确认历史分表存储，便于追溯与统计
+- 已实现接口: POST /api/supplier-portal/delivery-schedules 发布要货计划
+- 已实现接口: GET /api/supplier-portal/delivery-schedules 供应商查看要货计划
+- 支持批量同步多期要货计划，版本变更可增量同步
+- 经验：
+  - 要货计划由 ERP/计划系统批量同步，接口需兼容多订单、多供应商
+  - 时间精度支持日/周，便于灵活排产
+  - 要货计划建议分表存储，便于历史追溯与大数据量处理
+- 已实现接口: GET /api/purchase-orders/{id}/history 查看订单变更历史
+- 订单关闭、取消和变更结果由 ERP 同步，状态变更自动推送供应商
+- 已取消订单不可再修改，变更历史完整留存
+- 经验：
+  - 订单变更与关闭需与 ERP 实时同步，接口需兼容多状态流转
+  - 变更历史建议结构化存储，包含时间、来源、操作摘要，便于追溯
+  - 订单状态变更自动通知供应商，提升协同效率
+- 已实现接口: POST /api/supplier-portal/orders 发布采购订单
+- 已实现接口: GET /api/supplier-portal/orders 供应商查看订单
+- 已实现接口: POST /api/supplier-portal/orders/{id}/confirm 供应商确认订单
+- 已实现接口: POST /api/supplier-portal/orders/{id}/reject 供应商提出异议
+- 订单状态: 待确认 / 已确认 / 异议处理中 / 已关闭 / 已取消
+- 经验：
+  - 采购订单由 ERP 批量同步，接口需兼容多物料、多供应商
+  - 供应商确认或拒绝后，状态实时同步回采购侧系统
+  - 异议原因建议结构化存储，便于后续分析与改进
+- 已实现接口: GET /api/forecast/purchases/received 供应商查看收到的采购预测
+- 已实现接口: POST /api/forecast/purchases/{id}/respond 供应商提交产能响应
+- 响应字段: 物料承诺供应量、交期、风险说明，风险等级自动判定
+- 采购方可见所有供应商响应状态，响应后预测状态变为“已确认”
+- 经验：
+  - 产能响应需与采购预测联动，响应后自动更新预测状态
+  - 风险等级建议自动计算，低于80%触发预警，便于采购方预判供应风险
+  - 响应历史建议分表存储，便于追溯与统计分析
+- 已实现接口: POST /api/forecast/purchases 发布采购预测
+- 采购预测同步字段: 供应商ID、周期、物料明细、状态
+- 预测状态: 草稿 / 已发布 / 已确认 / 已过期，支持滚动更新
+- 发布后自动推送给供应商，供应商可在门户查看
+- 经验：
+  - 采购预测由 ERP/计划系统批量同步，接口需兼容多周期、多物料
+  - 预测状态流转与供应商响应联动，便于后续产能确认
+  - 预测数据建议分表存储，便于大数据量处理与历史追溯
+- 已实现接口: GET /api/contracts/{contract_id}/sign-status 查询合同状态
+- 合同状态枚举: 待签署 / 供应商已签 / 采购方已签 / 已生效 / 已到期 / 已终止
+- 合同状态流转与签署结果由合同系统或电子签系统同步，签署完成后自动变为“已生效”
+- 合同状态变化自动通知相关供应商，历史完整留存
+- 经验：
+  - 合同状态流转以外部系统为准，本系统负责展示与通知
+  - 状态变更需防止越权操作，确保合规
+  - 合同状态流转与签署历史建议单独表存储，便于追溯与审计
+- 已实现接口: GET /api/contracts/{contract_id}/sign-status 查询签署任务与状态
+- 已实现接口: POST /api/contracts/{contract_id}/sign 供应商在线签署（party=supplier）
+- 签署记录包含签署人、签署时间，IP 可通过 request.client.host 获取并补充
+- 签署后合同状态自动流转为“供应商已签”，双方签署后为“已生效”
+- 经验：
+  - 签署动作建议补充IP留痕，便于合规审计
+  - 合同状态流转与签署顺序可配置，兼容电子签系统同步
+  - 供应商签署后自动通知采购方，便于后续生效
+  - 合同签署接口需防止重复签署与越权操作
+  - 合同签署历史完整留存，便于追溯
+- 已实现接口: GET /api/contracts/{contract_id}/feedback-items 获取合同反馈条款和批注
+- 已实现接口: POST /api/contracts/{contract_id}/feedback 供应商提交合同修改意见反馈
+- 已实现接口: PATCH /api/contracts/comments/{comment_id}/resolve 标记反馈为已处理
+- 经验：
+  - 反馈可按条款逐条提交，并支持采购侧标记已处理
+  - 提交反馈后合同状态进入 pending_feedback，关闭后可继续签署流程
+  - 该设计兼容内部合同系统同步处理结果回传场景
+
+=== US-203: 供应商在线投标报价（SRM功能，仅保留菜单） ===
+- 本功能为采购方SRM系统能力，本系统仅保留菜单入口，不做具体功能实现
+- API 路由 /sourcing/projects/{id}/bid 仅返回“功能由SRM系统实现”提示，不做实际投标处理
+- 经验：
+  - 供应商端菜单入口可跳转或提示“请前往SRM系统完成投标”
+  - 保持接口兼容性，便于后续 SRM 系统集成
+  - 相关数据模型（SourcingBid）仅做占位，不在本系统内落地业务逻辑
+
+=== US-202: 供应商接收/拒绝邀请 ===
+- 供应商在门户收到寻源邀请通知，可确认参与或谢绝，响应结果同步回采购侧内部系统
+- 已实现 API:
+  - GET /api/sourcing/projects/invitations 供应商查看收到的寻源邀请
+  - POST /api/sourcing/projects/{id}/accept 供应商确认参与
+  - POST /api/sourcing/projects/{id}/decline 供应商谢绝参与（可填写原因）
+- 数据模型: SourcingInvitation
+- 经验：
+  - 供应商只能处理自己收到的邀请，重复操作会提示已处理
+  - 响应结果实时回传采购侧，状态同步为：已邀请/已接受/已谢绝/待响应
+  - 谢绝时可选填原因，便于采购侧后续分析
+  - API 需兼容 SRM/ERP 系统批量同步和状态回传
+  - 供应商响应截止时间由项目 deadline 控制，超时不可再响应
+
+=== US-201: 寻源项目发布 ===
+- 采购侧 SRM/寻源系统通过接口同步项目主数据（project_name, type, materials, deadline, invited_suppliers, evaluation_criteria）
+- 本系统仅负责发布项目给受邀供应商，供应商在门户查看受邀项目并进入后续响应流程
+- 已实现 API: POST /api/sourcing/projects 创建寻源项目（自动生成 SourcingInvitation 记录）
+- 已实现 API: GET /api/sourcing/projects/invitations 供应商查看收到的寻源邀请
+- 数据模型: SourcingProject, SourcingInvitation
+- 经验：
+  - 采购侧不在本系统内直接操作，仅同步数据
+  - 供应商端可见受邀项目，后续响应流程由 SRM 系统主导
+  - SourcingProject.status: DRAFT/OPEN/EVALUATING/AWARDED/CANCELLED
+  - SourcingInvitation.status: pending/accepted/declined
+  - 供应商主数据需提前同步，invited_supplier_ids 必须存在于合格供应商库
+  - API 设计需兼容 SRM/ERP 系统批量同步
+  - 仅保留菜单入口的 SRM 功能（如投标、开标）不做具体实现
+
+- 寻源项目: SourcingProject/SourcingInvitation/SourcingBid/SourcingAward
+- 合同管理: ContractTemplate/Contract/ContractComment
+- 核心API: /api/sourcing/*, /api/contracts/*
+
+=== Phase 2+ 角色边界调整 ===
+- 从 Phase 2 开始，采购侧默认通过 SRM/ERP/WMS/QMS/财务系统同步数据到本系统，不在本系统中执行常规业务操作
+- 供应商为门户侧主要操作方，负责响应邀请、投标、反馈合同、签署、确认计划、提交ASN、结算与发票等动作
+- 采购侧在本系统中的例外操作: US-308 送货计划审批、US-309 装箱单与批次信息审批、US-402 结算单审核、US-404 发票审批
+- 公告栏属于采购侧需要在本系统中维护的通用运营能力，不纳入以上默认规则
+
+=== 通用能力: 公告栏运营协同 (US-501) ===
+- 采购侧在本系统内执行: 发布、编辑、删除公告
+- 供应商在本系统内执行: 查看公告、记录已读
+- 外部系统同步来源: 无，公告栏数据完全由本系统维护
+- 现有能力已覆盖: 公告列表、详情、发布、编辑、删除、已读记录、类型统计

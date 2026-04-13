@@ -1,0 +1,728 @@
+{
+  "projectName": "白酒供应链协同平台 - 供应商全链路协同管理",
+  "branchName": "feature/supplier-collaboration",
+  "version": "1.0.0",
+  "description": "面向白酒企业的供应商全链路数字化协同系统，覆盖「供应商准入 → 寻源合同 → 订单执行 → 财务结算」四大阶段，实现采购方与供应商的端到端在线协同。",
+  "phases": [
+    {
+      "name": "Phase 1: 供应商准入与主数据协同",
+      "description": "确保引入合格、可信的供应商，并维护其主数据",
+      "priority": 1
+    },
+    {
+      "name": "Phase 2: 寻源与合同协同",
+      "description": "完成供应商选择与法律关系的建立",
+      "priority": 2
+    },
+    {
+      "name": "Phase 3: 预测与订单执行协同",
+      "description": "日常供应协同的核心，实现信息拉通与过程可视化",
+      "priority": 3
+    },
+    {
+      "name": "Phase 4: 财务结算协同",
+      "description": "实现交易闭环，提升财务效率与透明度",
+      "priority": 4
+    },
+    {
+      "name": "Phase 5: 通用运营能力",
+      "description": "跨阶段的公告与运营通知能力，不参与主链依赖",
+      "priority": 5
+    }
+  ],
+  "userStories": [
+    {
+      "id": "US-101",
+      "title": "供应商注册邀请",
+      "description": "采购方可主动向目标供应商发送注册邀请链接，供应商凭邀请码进入注册页面",
+      "acceptanceCriteria": [
+        "POST /api/supplier-portal/invitations 创建邀请记录，生成唯一邀请码",
+        "GET /api/supplier-portal/invitations/{code}/validate 验证邀请码有效性",
+        "返回邀请人企业名称、被邀请供应商预填信息",
+        "邀请码有效期7天，过期自动失效",
+        "已使用过的邀请码不可重复使用"
+      ],
+      "priority": 1,
+      "passes": true,
+      "dependsOn": [],
+      "phase": 1,
+      "buyerAction": "发起注册邀请、维护邀请对象、发送注册链接",
+      "supplierAction": "无",
+      "syncSource": "无",
+      "notes": "邀请记录表: invitation_code, supplier_name, email, status, expiry_date, created_by"
+    },
+    {
+      "id": "US-102",
+      "title": "供应商自助注册",
+      "description": "供应商通过邀请链接或公开门户自助注册，在线填写企业基本信息、营业执照、联系人等",
+      "acceptanceCriteria": [
+        "GET /api/supplier-portal/invitations/{code}/validate 获取邀请信息预填表单",
+        "POST /api/supplier-portal/register 提交完整注册信息",
+        "必填字段: 企业名称、统一社会信用代码、联系人、联系电话",
+        "可选字段: 营业执照上传、主营产品类目、产能规模",
+        "注册后状态为'待审核'，发送通知给采购方",
+        "同一统一社会信用代码不可重复注册"
+      ],
+      "priority": 2,
+      "passes": true,
+      "dependsOn": ["US-101"],
+      "phase": 1,
+      "buyerAction": "无",
+      "supplierAction": "填写注册信息、提交企业资料",
+      "syncSource": "无",
+      "notes": "供应商注册信息独立存储，不覆盖主数据表；注册审核通过后写入主数据"
+    },
+    {
+      "id": "US-103",
+      "title": "供应商注册状态查询",
+      "description": "供应商可实时查询注册审批进度；采购方在线审核并反馈结果",
+      "acceptanceCriteria": [
+        "GET /api/supplier-portal/register/status?unified_credit_code={code} 供应商查询自己的注册状态",
+        "状态枚举: 待审核 / 审核中 / 已通过 / 被驳回",
+        "GET /api/supplier-portal/pending-audit 采购方获取待审核列表",
+        "POST /api/supplier-portal/registrations/{id}/audit 采购方审核注册申请",
+        "审核通过: 状态变为'已通过'，生成供应商portal账号",
+        "审核驳回: 记录驳回原因，供应商可修改后重新提交"
+      ],
+      "priority": 3,
+      "passes": true,
+      "dependsOn": ["US-102"],
+      "phase": 1,
+      "buyerAction": "审核注册申请、批准或驳回、维护驳回原因",
+      "supplierAction": "按驳回意见补充资料并重新提交",
+      "syncSource": "无",
+      "notes": "审核通过后才创建正式的 supplier 记录和 portal 用户"
+    },
+    {
+      "id": "US-104",
+      "title": "供应商资格评审项目创建",
+      "description": "采购方针对特定采购品类或项目，向已注册的潜在供应商发起正式的资格评审项目",
+      "acceptanceCriteria": [
+        "POST /api/qualification/projects 创建资格评审项目",
+        "必填: 项目名称、评审品类、目标供应商ID列表",
+        "可选: 评审截止日期、评审标准模板",
+        "状态枚举: 待供应商响应 / 评审中 / 已完成",
+        "自动通知被邀请供应商",
+        "支持批量邀请多个供应商"
+      ],
+      "priority": 4,
+      "passes": true,
+      "dependsOn": ["US-103"],
+      "phase": 1,
+      "buyerAction": "创建资格评审项目、选择目标供应商、发布评审要求",
+      "supplierAction": "无",
+      "syncSource": "无",
+      "notes": "资格评审项目表: project_name, categories[], target_supplier_ids[], deadline, status"
+    },
+    {
+      "id": "US-105",
+      "title": "供应商在线填写资格问卷",
+      "description": "供应商在线完成详细的资质调查问卷，上传必要的资质证书",
+      "acceptanceCriteria": [
+        "GET /api/qualification/projects/{id}/questionnaire 获取问卷表单",
+        "POST /api/qualification/projects/{id}/submission 供应商提交问卷答案",
+        "支持上传文件: 资质证书(图片/PDF)、财务报表(Excel/PDF)、行业认证扫描件",
+        "文件大小限制: 单文件≤10MB",
+        "提交后状态变为'评审中'，通知采购方",
+        "在采购方驳回前可多次修改提交"
+      ],
+      "priority": 5,
+      "passes": true,
+      "dependsOn": ["US-104"],
+      "phase": 1,
+      "buyerAction": "无",
+      "supplierAction": "填写资格问卷、上传资质文件、补充提交材料",
+      "syncSource": "无",
+      "notes": "问卷字段: 基本信息 / 生产能力 / 质量体系 / 财务状况 / 合作案例 / 自评得分"
+    },
+    {
+      "id": "US-106",
+      "title": "采购方评审资格文件",
+      "description": "采购方组织多部门在线评审文件与问卷结果，可发起在线澄清",
+      "acceptanceCriteria": [
+        "GET /api/qualification/projects/{id}/submissions 获取供应商提交材料列表",
+        "GET /api/qualification/projects/{id}/submissions/{supplier_id} 评审详情",
+        "POST /api/qualification/projects/{id}/submissions/{supplier_id}/review 提交评审意见",
+        "支持多角色评审: 技术评分 / 质量评分 / 财务评分",
+        "支持发起澄清请求，供应商补充材料",
+        "记录完整评审历史"
+      ],
+      "priority": 6,
+      "passes": true,
+      "dependsOn": ["US-105"],
+      "phase": 1,
+      "buyerAction": "组织多角色评审、发起澄清、提交评审意见",
+      "supplierAction": "回复澄清、补交材料",
+      "syncSource": "无",
+      "notes": "评审维度: 技术能力(40%)、质量体系(30%)、财务状况(30%)"
+    },
+    {
+      "id": "US-107",
+      "title": "资格申请状态协同",
+      "description": "双方实时同步评审状态；通过后供应商被正式纳入合格供应商库",
+      "acceptanceCriteria": [
+        "GET /api/qualification/projects/{id}/status 供应商查询资格申请状态",
+        "状态枚举: 待提交 / 评审中 / 补充材料 / 已通过 / 未通过",
+        "POST /api/qualification/projects/{id}/approve 采购方最终审批通过",
+        "POST /api/qualification/projects/{id}/reject 采购方审批不通过",
+        "通过后: 自动更新 supplier.status='qualified'，纳入合格供应商库",
+        "未通过: 记录原因，供应商可申请重新评审"
+      ],
+      "priority": 7,
+      "passes": true,
+      "dependsOn": ["US-106"],
+      "phase": 1,
+      "buyerAction": "最终批准或拒绝资格申请、维护审批原因",
+      "supplierAction": "补充材料后重新申请",
+      "syncSource": "无",
+      "notes": "合格供应商库 = supplier.status='qualified' 的供应商"
+    },
+    {
+      "id": "US-108",
+      "title": "供应商资质过期预警与重认证",
+      "description": "系统对供应商的营业执照、资质证书设置有效期，自动预警并触发重认证流程",
+      "acceptanceCriteria": [
+        "供应商注册时录入资质有效期(expiry_date)",
+        "GET /api/suppliers/{id}/certifications 查看供应商所有资质及有效期",
+        "POST /api/suppliers/{id}/certifications 添加/更新资质",
+        "系统定时任务: 到期前30天/15天/7天/1天自动生成预警",
+        "预警记录写入 supplier_alerts 表",
+        "GET /api/supplier-alerts 采购方查看所有资质预警列表",
+        "触发重认证: 自动创建资格评审项目草稿，通知供应商"
+      ],
+      "priority": 8,
+      "passes": true,
+      "dependsOn": ["US-107"],
+      "phase": 1,
+      "buyerAction": "无",
+      "supplierAction": "更新资质有效期、提交重认证材料",
+      "syncSource": "资质到期预警和重认证草稿由系统自动触发",
+      "notes": "资质类型: 营业执照、生产许可证、质量体系认证、行业资质"
+    },
+    {
+      "id": "US-201",
+      "title": "寻源项目发布",
+      "description": "采购侧 SRM/寻源系统将 RFQ/RFP/RFI 项目同步到本系统，本系统仅负责发布项目给受邀供应商，供应商在门户查看受邀项目并进入后续响应流程。",
+      "acceptanceCriteria": [
+        "SRM/寻源系统将项目主数据同步到本系统",
+        "项目类型支持: RFQ(询价) / RFP(招标) / RFI(信息征集)",
+        "同步字段: 项目名称、类型、物料明细、截止时间",
+        "可同步字段: 评审标准、预算上限、是否启用反向竞价",
+        "同步合格供应商邀请范围，并生成供应商待响应记录",
+        "受邀供应商可在门户看到项目并进入后续响应流程"
+      ],
+      "priority": 9,
+      "passes": true,
+      "dependsOn": ["US-107"],
+      "phase": 2,
+      "buyerAction": "无",
+      "supplierAction": "无",
+      "syncSource": "寻源项目、邀请范围、评审标准等由 SRM/寻源系统同步",
+      "notes": "寻源项目表: project_name, type, materials[], invited_suppliers[], deadline, status"
+    },
+    {
+      "id": "US-202",
+      "title": "供应商接收/拒绝邀请",
+      "description": "供应商在门户收到寻源邀请通知，可确认参与或谢绝；响应结果同步回采购侧内部系统。",
+      "acceptanceCriteria": [
+        "GET /api/sourcing/projects/invitations 供应商查看收到的寻源邀请",
+        "POST /api/sourcing/projects/{id}/accept 供应商确认参与",
+        "POST /api/sourcing/projects/{id}/decline 供应商谢绝参与",
+        "谢绝时需填写原因（可选）",
+        "参与/谢绝结果实时回传并同步给采购侧内部系统",
+        "采购侧响应状态在本系统中展示为: 已邀请 / 已接受 / 已谢绝 / 待响应"
+      ],
+      "priority": 10,
+      "passes": true,
+      "dependsOn": ["US-201"],
+      "phase": 2,
+      "buyerAction": "无",
+      "supplierAction": "接受或拒绝寻源邀请、填写拒绝原因",
+      "syncSource": "邀请通知由 SRM/寻源系统同步，响应结果回传采购侧系统",
+      "notes": "寻源截止时间前，被邀请供应商均可响应"
+    },
+    {
+      "id": "US-203",
+      "title": "供应商在线投标报价（SRM功能，仅保留菜单）",
+      "description": "本功能为采购方SRM系统能力，本系统仅保留菜单入口，不做具体功能实现。",
+      "acceptanceCriteria": [
+        "GET /api/sourcing/projects/{id}/bid 供应商获取投标表单",
+        "POST /api/sourcing/projects/{id}/bid 供应商提交投标",
+        "报价字段: 各项物料单价/总价、交期、付款方式、技术方案摘要",
+        "支持上传附件: 技术方案文档、资质证明",
+        "报价加密存储，采购方在开标前无法查看",
+        "支持多轮报价，每轮报价记录完整"
+      ],
+      "priority": 11,
+      "passes": true,
+      "dependsOn": ["US-202"],
+      "phase": 2,
+      "buyerAction": "无",
+      "supplierAction": "提交投标报价、上传技术方案、参与多轮报价",
+      "syncSource": "寻源项目基础信息由 SRM/寻源系统同步",
+      "notes": "投标报价加密存储(bid_encrypted)，开标后解密可见"
+    },
+    {
+      "id": "US-204",
+      "title": "采购方在线开标比价（SRM功能，仅保留菜单）",
+      "description": "本功能为采购方SRM系统能力，本系统仅保留菜单入口，不做具体功能实现。",
+      "acceptanceCriteria": [
+        "开标结果由采购侧寻源系统同步到本系统",
+        "开标后: 所有报价解密可见",
+        "GET /api/sourcing/projects/{id}/comparison 获取比价表",
+        "比价表字段: 供应商名称、各项物料报价、交期、总价排名",
+        "澄清公告由采购侧寻源系统同步到本系统",
+        "参与供应商可基于澄清要求补充说明或更新报价"
+      ],
+      "priority": 12,
+      "passes": false,
+      "dependsOn": ["US-203"],
+      "phase": 2,
+      "buyerAction": "无",
+      "supplierAction": "根据澄清要求补充说明或更新报价",
+      "syncSource": "开标结果、比价表、澄清公告由 SRM/寻源系统同步",
+      "notes": "开标前报价不可查看，确保公平公正"
+    },
+    {
+      "id": "US-205",
+      "title": "中标/落标通知发布",
+      "description": "寻源结束后，授标结果由采购侧内部系统同步到本系统，中标/落标供应商收到通知。",
+      "acceptanceCriteria": [
+        "授标结果由采购侧寻源系统同步到本系统",
+        "同步字段: 中标供应商、物料分配数量、授标时间",
+        "自动发送中标通知给中标供应商（portal消息）",
+        "自动发送落标通知给未中标供应商（可选附原因）",
+        "授标后寻源项目状态变为'已授标'",
+        "未中标供应商可查看自己的报价及排名"
+      ],
+      "priority": 13,
+      "passes": false,
+      "dependsOn": ["US-204"],
+      "phase": 2,
+      "buyerAction": "无",
+      "supplierAction": "无",
+      "syncSource": "授标结果由 SRM/寻源系统同步",
+      "notes": "落标通知原因可选，不强制填写以避免纠纷"
+    },
+    {
+      "id": "US-206",
+      "title": "合同草案发布",
+      "description": "采购侧内部合同系统将合同草案同步到本系统，供应商查收合同草案并准备反馈。",
+      "acceptanceCriteria": [
+        "内部合同系统或 SRM 将合同草案同步到本系统",
+        "GET /api/contracts/drafts/{id} 供应商查看合同草案",
+        "自动填充: 供应商信息、标的物料、价格条款、交期",
+        "供应商可标记合同草案已查收",
+        "合同草案状态: 待查收 / 已查收 / 待反馈",
+        "支持下载合同正文和附件"
+      ],
+      "priority": 14,
+      "passes": false,
+      "dependsOn": ["US-205"],
+      "phase": 2,
+      "buyerAction": "无",
+      "supplierAction": "查收合同草案",
+      "syncSource": "合同草案、条款模板和主数据由合同系统或 SRM 同步",
+      "notes": "合同草案以内部合同系统为准，本系统侧重同步和供应商查收"
+    },
+    {
+      "id": "US-207",
+      "title": "合同修改意见反馈",
+      "description": "供应商基于合同草案在线提交修改意见，采购侧在内部合同系统处理后将结果同步回本系统。",
+      "acceptanceCriteria": [
+        "GET /api/contracts/drafts/{id}/feedback-items 获取可反馈条款",
+        "POST /api/contracts/{id}/feedback 供应商提交修改意见",
+        "支持针对指定条款逐条留言，并补充说明或附件",
+        "在签署前供应商可撤回或补充反馈",
+        "采购侧处理结果由内部合同系统同步回本系统",
+        "合同反馈状态: 待反馈 / 反馈中 / 已处理 / 待签署"
+      ],
+      "priority": 15,
+      "passes": false,
+      "dependsOn": ["US-206"],
+      "phase": 2,
+      "buyerAction": "无",
+      "supplierAction": "逐条提交合同修改意见、补充说明或附件",
+      "syncSource": "采购侧对修改意见的处理结果由合同系统同步",
+      "notes": "合同反馈记录可沿用 contract_id, clause_id, party, comment, created_at 结构"
+    },
+    {
+      "id": "US-208",
+      "title": "合同在线签署",
+      "description": "供应商在本系统接收签署任务并完成在线签署，签署过程留痕。",
+      "acceptanceCriteria": [
+        "内部合同系统或电子签系统将签署任务同步到本系统",
+        "GET /api/contracts/{id}/sign-task 查询供应商待签署任务",
+        "签署方收到签署通知（portal消息 + 可选邮件）",
+        "POST /api/contracts/{id}/sign 供应商完成签署",
+        "签署记录完整留存: 签署人、签署时间、IP地址",
+        "供应商签署后合同状态更新为'供应商已签'"
+      ],
+      "priority": 16,
+      "passes": false,
+      "dependsOn": ["US-207"],
+      "phase": 2,
+      "buyerAction": "无",
+      "supplierAction": "在线签署合同、完成签署确认",
+      "syncSource": "签署任务和签署顺序由合同系统或电子签系统同步",
+      "notes": "电子签章为模拟实现，记录供应商签署动作和时间戳即可"
+    },
+    {
+      "id": "US-209",
+      "title": "合同状态协同",
+      "description": "合同签署进度和生效状态由内部合同系统或电子签系统同步到本系统，双方可查看统一状态。",
+      "acceptanceCriteria": [
+        "GET /api/contracts/{id}/sign-status 查询合同状态",
+        "状态枚举: 待签署 / 供应商已签 / 采购方已签 / 已生效 / 已到期 / 已终止",
+        "采购侧签署结果和生效结果由内部合同系统或电子签系统同步",
+        "签署完成后: 状态变为'已生效'，锁定合同内容不可修改",
+        "状态变化自动通知相关供应商",
+        "合同状态流转和同步历史完整留存"
+      ],
+      "priority": 17,
+      "passes": true,
+      "dependsOn": ["US-208"],
+      "phase": 2,
+      "buyerAction": "无",
+      "supplierAction": "无",
+      "syncSource": "合同状态、签署结果和生效结果由合同系统或电子签系统同步",
+      "notes": "合同状态流转以合同系统或电子签系统为准，本系统负责展示和通知"
+    },
+    {
+      "id": "US-301",
+      "title": "采购预测发布",
+      "description": "采购侧 ERP/计划系统将中长期物料需求预测同步到本系统，供应商在门户查看预测并准备响应。",
+      "acceptanceCriteria": [
+        "ERP/计划系统同步采购预测到本系统",
+        "同步字段: 供应商ID、预测周期(年/季度/月)、物料明细列表",
+        "每项物料: 物料编码、预测数量、预计采购月份",
+        "预测状态: 草稿 / 已发布 / 已确认 / 已过期",
+        "发布后自动推送给对应供应商",
+        "支持滚动预测更新"
+      ],
+      "priority": 18,
+      "passes": true,
+      "dependsOn": ["US-209"],
+      "phase": 3,
+      "buyerAction": "无",
+      "supplierAction": "无",
+      "syncSource": "采购预测由 ERP/计划系统同步",
+      "notes": "采购预测表: forecast_id, supplier_id, period, items[], status"
+    },
+    {
+      "id": "US-302",
+      "title": "供应商产能响应",
+      "description": "供应商基于预测反馈产能准备情况、备料计划或潜在供应风险。",
+      "acceptanceCriteria": [
+        "GET /api/forecast/purchases/received 供应商查看收到的采购预测",
+        "POST /api/forecast/purchases/{id}/respond 供应商提交产能响应",
+        "响应字段: 各项物料的承诺供应量、承诺交期、风险说明",
+        "风险等级: 正常 / 预警 / 危机",
+        "采购方可见所有供应商的响应状态",
+        "响应后预测状态变为'已确认'"
+      ],
+      "priority": 19,
+      "passes": true,
+      "dependsOn": ["US-301"],
+      "phase": 3,
+      "buyerAction": "无",
+      "supplierAction": "提交产能响应、交期承诺、风险说明",
+      "syncSource": "采购预测基础数据由 ERP/计划系统同步，响应结果回传采购侧系统",
+      "notes": "产能预警: 当承诺量 < 预测量 * 80% 时触发预警"
+    },
+    {
+      "id": "US-303",
+      "title": "采购订单发布与接收",
+      "description": "采购侧 ERP 将采购订单同步到本系统，供应商在线确认或提出异议。",
+      "acceptanceCriteria": [
+        "ERP 同步协同采购订单到本系统",
+        "同步字段: 供应商ID、物料明细、订单金额、交期要求",
+        "创建后自动推送至供应商portal",
+        "GET /api/supplier-portal/orders 供应商查看收到的订单",
+        "POST /api/supplier-portal/orders/{id}/confirm 供应商确认订单",
+        "POST /api/supplier-portal/orders/{id}/reject 供应商提出异议（需填写原因）"
+      ],
+      "priority": 20,
+      "passes": true,
+      "dependsOn": ["US-302"],
+      "phase": 3,
+      "buyerAction": "无",
+      "supplierAction": "确认订单、拒绝订单、提出异议",
+      "syncSource": "采购订单由 ERP 同步，处理结果回传采购侧系统",
+      "notes": "订单状态: 待确认 / 已确认 / 异议处理中 / 已关闭 / 已取消"
+    },
+    {
+      "id": "US-304",
+      "title": "采购订单变更与关闭",
+      "description": "订单履行完成、变更或取消结果由 ERP 同步到本系统，供应商获知最新状态。",
+      "acceptanceCriteria": [
+        "订单关闭、取消和变更结果由 ERP 同步到本系统",
+        "状态变更自动推送通知给供应商",
+        "已取消订单不可再修改",
+        "GET /api/purchase-orders/{id}/history 查看订单变更历史",
+        "变更历史包含时间、来源系统、操作摘要"
+      ],
+      "priority": 21,
+      "passes": true,
+      "dependsOn": ["US-303"],
+      "phase": 3,
+      "buyerAction": "无",
+      "supplierAction": "无",
+      "syncSource": "订单变更、关闭和取消结果由 ERP 同步",
+      "notes": "订单变更记录完整留存"
+    },
+    {
+      "id": "US-305",
+      "title": "要货计划发布",
+      "description": "ERP 或计划系统将短期精确的要货计划同步到本系统，并推送给对应供应商。",
+      "acceptanceCriteria": [
+        "ERP 或计划系统将要货计划同步到本系统",
+        "同步字段: 关联采购订单、供应商ID、物料明细、要求到货日期/时间窗口",
+        "时间精度: 支持精确到日或周",
+        "发布后自动推送供应商确认",
+        "支持批量同步多期要货计划",
+        "要货计划版本变更可增量同步"
+      ],
+      "priority": 22,
+      "passes": true,
+      "dependsOn": ["US-303"],
+      "phase": 3,
+      "buyerAction": "无",
+      "supplierAction": "无",
+      "syncSource": "要货计划由 ERP 或计划系统同步",
+      "notes": "要货计划表: schedule_id, po_id, supplier_id, items[], required_date"
+    },
+    {
+      "id": "US-306",
+      "title": "供应商确认/修正要货计划",
+      "description": "供应商确认要货计划，或反馈调整建议；采购侧在内部系统处理后同步最终结果。",
+      "acceptanceCriteria": [
+        "GET /api/supplier-portal/delivery-schedules 供应商查看要货计划",
+        "POST /api/supplier-portal/delivery-schedules/{id}/confirm 供应商确认",
+        "POST /api/supplier-portal/delivery-schedules/{id}/suggest 供应商建议调整",
+        "调整建议字段: 建议到货日期、调整原因",
+        "采购侧处理结果由 ERP 或计划系统同步回本系统",
+        "双方协商达成一致后，生成最终送货承诺"
+      ],
+      "priority": 23,
+      "passes": true,
+      "dependsOn": ["US-305"],
+      "phase": 3,
+      "buyerAction": "无",
+      "supplierAction": "确认要货计划、提交调整建议",
+      "syncSource": "要货计划基础数据由 ERP/计划系统同步，处理结果回传采购侧系统",
+      "notes": "调整建议需采购侧处理后回传，不可单方面修改"
+    },
+    {
+      "id": "US-307",
+      "title": "供应商创建送货计划 (ASN)",
+      "description": "供应商根据确认的要货计划，创建详细的发货通知 ASN。",
+      "acceptanceCriteria": [
+        "POST /api/asn 创建ASN（提前发货通知）",
+        "必填: 关联要货计划ID、实际发货日期、运输商信息、装箱明细",
+        "自动生成ASN编号",
+        "状态: 待确认 / 已确认 / 已到货",
+        "创建后自动推送给采购方",
+        "发货前可多次修改ASN"
+      ],
+      "priority": 24,
+      "passes": true,
+      "dependsOn": ["US-306"],
+      "phase": 3,
+      "buyerAction": "无",
+      "supplierAction": "创建 ASN、维护发货信息",
+      "syncSource": "已确认要货计划由 ERP/计划系统同步",
+      "notes": "ASN表: asn_id, schedule_id, actual_ship_date, carrier, items[], status"
+    },
+    {
+      "id": "US-308",
+      "title": "采购方确认送货计划",
+      "description": "采购方在本系统对供应商提交的送货计划执行批准、拒绝或修改。",
+      "acceptanceCriteria": [
+        "GET /api/asn 采购方查看所有ASN列表",
+        "GET /api/asn/{id} 查看ASN详情",
+        "POST /api/asn/{id}/approve 采购方批准送货计划",
+        "POST /api/asn/{id}/reject 采购方拒绝送货计划（需填写原因）",
+        "POST /api/asn/{id}/modify 采购方修改送货安排并通知供应商确认",
+        "记录批准/拒绝/修改历史"
+      ],
+      "priority": 25,
+      "passes": true,
+      "dependsOn": ["US-307"],
+      "phase": 3,
+      "buyerAction": "批准、拒绝、修改送货计划",
+      "supplierAction": "根据采购侧处理结果确认或调整送货安排",
+      "syncSource": "ASN 基础数据由供应商在本系统提交",
+      "notes": "ASN确认是收货准备的必要前提"
+    },
+    {
+      "id": "US-309",
+      "title": "装箱单与批次信息提交",
+      "description": "送货前，供应商在线提交详细的物流、包装、批次及物料追溯信息，采购方在本系统审批并反馈修改要求。",
+      "acceptanceCriteria": [
+        "POST /api/asn/{id}/packing-list 供应商提交装箱单",
+        "装箱单字段: 箱号、每箱物料明细(含批号/序列号)、数量、毛重/净重",
+        "批次信息: 生产日期、有效期、产地",
+        "条码信息: 支持上传条码清单文件",
+        "采购方可批准、拒绝或修改装箱单与批次信息",
+        "审批结果通知供应商，收货后批次信息自动关联入库记录"
+      ],
+      "priority": 26,
+      "passes": true,
+      "dependsOn": ["US-307"],
+      "phase": 3,
+      "buyerAction": "批准、拒绝、修改装箱单与批次信息",
+      "supplierAction": "提交装箱单与批次信息，并按意见修改",
+      "syncSource": "ASN 基础数据来自本系统，入库关联结果由 WMS/QMS 同步",
+      "notes": "批次追溯是白酒行业的合规要求（溯源体系）"
+    },
+    {
+      "id": "US-310",
+      "title": "收货与验收结果发布",
+      "description": "WMS/QMS 将收货数量和质量检验结果同步到本系统，供应商可实时查询。",
+      "acceptanceCriteria": [
+        "WMS/QMS 同步收货单到本系统",
+        "收货字段: 实际到货数量、到货时间、验收结果",
+        "验收结果枚举: 合格 / 不合格 / 特采",
+        "不合格详情: 不合格数量、不合格原因、处理方式",
+        "自动通知供应商",
+        "供应商可查询收货状态和检验结果"
+      ],
+      "priority": 27,
+      "passes": true,
+      "dependsOn": ["US-308"],
+      "phase": 3,
+      "buyerAction": "无",
+      "supplierAction": "无",
+      "syncSource": "收货单和质检结果由 WMS/QMS 同步",
+      "notes": "收货单关联采购订单、ASN、质检单"
+    },
+    {
+      "id": "US-401",
+      "title": "供应商创建结算单",
+      "description": "供应商基于已确认的收货记录，在线生成对账单。",
+      "acceptanceCriteria": [
+        "POST /api/settlement/statements 创建结算单",
+        "基于已收货且未结算的收货单汇总",
+        "结算字段: 结算期间、供应商信息、应收金额、物料明细对账",
+        "金额自动汇总（可人工调整）",
+        "状态: 待采购方审核 / 已确认 / 有异议 / 已关闭",
+        "提交后自动推送给采购方"
+      ],
+      "priority": 28,
+      "passes": true,
+      "dependsOn": ["US-310"],
+      "phase": 4,
+      "buyerAction": "无",
+      "supplierAction": "创建结算单、提交对账信息",
+      "syncSource": "已收货且未结算记录由 ERP/WMS/QMS 同步",
+      "notes": "结算单表: statement_id, supplier_id, period, total_amount, status"
+    },
+    {
+      "id": "US-402",
+      "title": "采购方审核结算单",
+      "description": "采购方在线核对结算单与收货记录，执行批准、拒绝或留言沟通。",
+      "acceptanceCriteria": [
+        "GET /api/settlement/statements 采购方查看结算单列表",
+        "GET /api/settlement/statements/{id} 查看结算单详情（含关联收货单明细）",
+        "POST /api/settlement/statements/{id}/approve 采购方批准结算单",
+        "POST /api/settlement/statements/{id}/reject 采购方拒绝结算单（需填写原因）",
+        "POST /api/settlement/statements/{id}/comment 采购方留言沟通差异",
+        "供应商可根据意见修订结算单，确认后形成无争议应付账款"
+      ],
+      "priority": 29,
+      "passes": true,
+      "dependsOn": ["US-401"],
+      "phase": 4,
+      "buyerAction": "批准、拒绝、留言",
+      "supplierAction": "根据意见修订结算单、回复留言",
+      "syncSource": "收货明细和应付基础数据由 ERP/WMS/QMS 同步",
+      "notes": "应付账款 = 结算单确认金额"
+    },
+    {
+      "id": "US-403",
+      "title": "发票创建与上传",
+      "description": "供应商根据结算单创建发票信息，上传发票影像。",
+      "acceptanceCriteria": [
+        "POST /api/invoices 创建发票记录",
+        "关联结算单",
+        "发票字段: 发票号、发票类型、金额、税率、开票日期",
+        "上传发票影像（PDF/图片）",
+        "状态: 开票中 / 待采购方审核 / 已通过 / 已拒绝",
+        "自动推送发票信息给采购方"
+      ],
+      "priority": 30,
+      "passes": true,
+      "dependsOn": ["US-402"],
+      "phase": 4,
+      "buyerAction": "无",
+      "supplierAction": "创建发票、上传发票影像",
+      "syncSource": "已确认结算单和财务主数据由 ERP/财务系统同步",
+      "notes": "发票表: invoice_id, statement_id, invoice_number, amount, tax_rate, image_url"
+    },
+    {
+      "id": "US-404",
+      "title": "采购方三单匹配与发票审批",
+      "description": "系统自动执行三单匹配（订单/收货单/发票），采购方在本系统审批发票。",
+      "acceptanceCriteria": [
+        "GET /api/invoices/{id}/match 获取三单匹配结果",
+        "匹配字段: 订单号、收货单号、发票号、金额、数量",
+        "匹配结果: 完全匹配 / 金额差异 / 数量差异 / 不匹配",
+        "POST /api/invoices/{id}/approve 采购方审批发票",
+        "POST /api/invoices/{id}/reject 采购方拒绝发票（需填写原因）",
+        "审批通过后自动生成应付账款记录"
+      ],
+      "priority": 31,
+      "passes": true,
+      "dependsOn": ["US-403"],
+      "phase": 4,
+      "buyerAction": "查看三单匹配结果、批准或拒绝发票",
+      "supplierAction": "按驳回原因补充说明或重提发票",
+      "syncSource": "订单、收货和发票基础数据由 ERP/WMS/财务系统同步",
+      "notes": "三单匹配: PO + Receipt + Invoice，三者金额和数量应一致"
+    },
+    {
+      "id": "US-405",
+      "title": "付款状态发布与查询",
+      "description": "付款状态由财务系统同步到本系统，供应商一站式查询所有订单的付款进度。",
+      "acceptanceCriteria": [
+        "财务系统将付款记录同步到本系统",
+        "同步字段: 付款金额、付款方式、预计付款日期、实际付款日期",
+        "状态枚举: 付款申请已提交 / 财务已审批 / 银行已支付 / 已到账",
+        "付款状态变化自动通知供应商",
+        "GET /api/supplier-portal/payments 供应商查询所有付款记录",
+        "支持按时间段、状态、供应商筛选"
+      ],
+      "priority": 32,
+      "passes": true,
+      "dependsOn": ["US-404"],
+      "phase": 4,
+      "buyerAction": "无",
+      "supplierAction": "无",
+      "syncSource": "付款记录和付款状态由财务系统同步",
+      "notes": "付款进度透明化是提升供应商满意度的重要因素"
+    },
+    {
+      "id": "US-501",
+      "title": "公告栏运营协同",
+      "description": "公告栏是本系统内维护的通用运营能力，采购侧负责发布和维护公告，供应商侧负责查看与记录已读。",
+      "acceptanceCriteria": [
+        "GET /api/announcements 获取公告列表，支持公告/政策/操作指引分类",
+        "POST /api/announcements 采购侧发布公告",
+        "GET /api/announcements/{id} 查看公告详情",
+        "PUT /api/announcements/{id} 采购侧编辑公告",
+        "DELETE /api/announcements/{id} 采购侧删除公告",
+        "POST /api/announcements/{id}/record-read 供应商记录已读",
+        "GET /api/announcements/types/summary 获取公告类型统计"
+      ],
+      "priority": 33,
+      "passes": true,
+      "dependsOn": [],
+      "phase": 5,
+      "buyerAction": "发布、编辑、删除公告",
+      "supplierAction": "查看公告、记录已读",
+      "syncSource": "无，由本系统内维护",
+      "notes": "公告栏属于通用运营能力，已存在后端接口与种子数据，不参与主链依赖"
+    }
+  ]
+}

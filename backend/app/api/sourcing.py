@@ -874,6 +874,141 @@ async def add_contract_comment(
     return {"success": True, "comment_id": cmt.id}
 
 
+# ==================== US-206/207: 合同草案查收与反馈 ====================
+
+@router.get("/contracts/drafts/{contract_id}")
+async def get_contract_draft(
+    contract_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    """供应商查看合同草案"""
+    result = await db.execute(
+        select(Contract)
+        .options(selectinload(Contract.supplier))
+        .where(Contract.id == contract_id)
+    )
+    contract = result.scalar_one_or_none()
+    if not contract:
+        raise HTTPException(status_code=404, detail="合同不存在")
+    if contract.status != ContractStatus.DRAFT:
+        raise HTTPException(status_code=400, detail="当前合同不是草案状态")
+
+    return {
+        "id": contract.id,
+        "contract_no": contract.contract_no,
+        "contract_name": contract.contract_name,
+        "supplier_id": contract.supplier_id,
+        "supplier_name": contract.supplier.name if contract.supplier else None,
+        "contract_amount": contract.contract_amount,
+        "content": contract.content,
+        "status": contract.status,
+        "created_at": contract.created_at
+    }
+
+
+@router.post("/contracts/drafts/{contract_id}/acknowledge")
+async def acknowledge_contract_draft(
+    contract_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    """供应商标记合同草案已查收"""
+    result = await db.execute(
+        select(Contract).where(Contract.id == contract_id)
+    )
+    contract = result.scalar_one_or_none()
+    if not contract:
+        raise HTTPException(status_code=404, detail="合同不存在")
+    if contract.status != ContractStatus.DRAFT:
+        raise HTTPException(status_code=400, detail="当前合同不处于草案状态")
+
+    contract.status = ContractStatus.RECEIVED
+    await db.flush()
+    return {"success": True, "message": "合同草案已查收"}
+
+
+@router.get("/contracts/{contract_id}/feedback-items")
+async def get_contract_feedback_items(
+    contract_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    """获取合同反馈条款和批注"""
+    result = await db.execute(
+        select(Contract).where(Contract.id == contract_id)
+    )
+    contract = result.scalar_one_or_none()
+    if not contract:
+        raise HTTPException(status_code=404, detail="合同不存在")
+
+    comments_result = await db.execute(
+        select(ContractComment)
+        .where(ContractComment.contract_id == contract_id)
+        .order_by(ContractComment.created_at.asc())
+    )
+    comments = comments_result.scalars().all()
+    return [
+        {
+            "id": c.id,
+            "clause_id": c.clause_id,
+            "party": c.party,
+            "comment": c.comment,
+            "resolved": bool(c.resolved),
+            "created_at": c.created_at
+        }
+        for c in comments
+    ]
+
+
+@router.post("/contracts/{contract_id}/feedback")
+async def add_contract_feedback(
+    contract_id: int,
+    clause_id: str = Query(""),
+    party: str = Query(...),  # buyer/supplier
+    comment: str = Query(...),
+    created_by: int = Query(1),
+    db: AsyncSession = Depends(get_db)
+):
+    """供应商提交合同修改意见反馈"""
+    result = await db.execute(
+        select(Contract).where(Contract.id == contract_id)
+    )
+    contract = result.scalar_one_or_none()
+    if not contract:
+        raise HTTPException(status_code=404, detail="合同不存在")
+    if contract.status not in [ContractStatus.DRAFT, ContractStatus.RECEIVED, ContractStatus.PENDING_FEEDBACK, ContractStatus.PENDING_SIGN]:
+        raise HTTPException(status_code=400, detail="当前合同状态不允许提交反馈")
+
+    cmt = ContractComment(
+        contract_id=contract_id,
+        clause_id=clause_id,
+        party=party,
+        comment=comment,
+        created_by=created_by
+    )
+    db.add(cmt)
+    contract.status = ContractStatus.PENDING_FEEDBACK
+    await db.flush()
+    await db.refresh(cmt)
+    return {"success": True, "comment_id": cmt.id}
+
+
+@router.patch("/contracts/comments/{comment_id}/resolve")
+async def resolve_contract_comment(
+    comment_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    """标记合同反馈意见为已处理"""
+    result = await db.execute(
+        select(ContractComment).where(ContractComment.id == comment_id)
+    )
+    comment = result.scalar_one_or_none()
+    if not comment:
+        raise HTTPException(status_code=404, detail="批注不存在")
+
+    comment.resolved = 1
+    await db.flush()
+    return {"success": True, "message": "反馈意见已标记为已处理"}
+
+
 # ==================== US-208: 合同签署与状态跟踪 ====================
 
 @router.post("/contracts/{contract_id}/sign-initiate")
@@ -889,7 +1024,7 @@ async def initiate_signing(
     contract = result.scalar_one_or_none()
     if not contract:
         raise HTTPException(status_code=404, detail="合同不存在")
-    if contract.status not in ["draft"]:
+    if contract.status not in [ContractStatus.DRAFT, ContractStatus.RECEIVED, ContractStatus.PENDING_FEEDBACK]:
         raise HTTPException(status_code=400, detail="当前状态不允许发起签署")
 
     await db.execute(text(
