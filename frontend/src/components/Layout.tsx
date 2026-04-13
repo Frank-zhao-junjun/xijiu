@@ -89,7 +89,7 @@ const Layout: React.FC = () => {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <span style={{ fontSize: 18, fontWeight: 700, color: '#1a1a1a' }}>白酒供应链协同平台</span>
+          <span style={{ fontSize: 18, fontWeight: 700, color: '#1a1a1a' }}>采购供应链协同平台</span>
           <div style={{ display: 'flex', gap: 4, background: '#f5f5f5', borderRadius: 6, padding: 3 }}>
             <Button
               type={portal === 'buyer' ? 'primary' : 'text'}
