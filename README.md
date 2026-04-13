@@ -139,6 +139,21 @@ Bash：
 XIJIU_API_BASE=http://localhost:3000 pytest tests/api/test_user_stories_smoke.py -q
 ```
 
+### 3 步最短验收流程（复制即跑）
+
+```bash
+# 1) 启动整套服务
+docker compose up -d --build
+
+# 2) 跑全量 US 测试（择一）
+./scripts/run-us-tests.sh --nginx
+# 或 PowerShell:
+# .\scripts\run-us-tests.ps1 -ThroughNginx
+
+# 3) 验收完成后清理
+docker compose down
+```
+
 ## 访问地址
 
 | 服务 | 地址 |
