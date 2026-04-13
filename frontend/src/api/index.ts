@@ -42,6 +42,141 @@ export const getSalesOrders = (params = {}) => api.get('/sales-orders/', { param
 // Warehouses API
 export const getWarehouses = (params = {}) => api.get('/warehouses/', { params })
 
+// ============ 供应商准入 API (Phase 1) ============
+
+// US-101: 注册邀请
+export const createInvitation = (data: {
+  invited_supplier_name: string
+  invited_email: string
+  invited_contact_person?: string
+  notes?: string
+  expiry_days?: number
+}) => api.post('/supplier-portal/invitations', data)
+
+export const getInvitations = (params?: { status?: string }) =>
+  api.get('/supplier-portal/invitations', { params })
+
+export const deleteInvitation = (id: number) =>
+  api.delete(`/supplier-portal/invitations/${id}`)
+
+export const validateInvitationCode = (code: string) =>
+  api.get(`/supplier-portal/invitations/${code}/validate`)
+
+// US-102: 供应商自助注册
+export const registerSupplier = (data: {
+  invitation_code: string
+  company_name: string
+  contact_person: string
+  email: string
+  phone: string
+  business_scope?: string
+  registered_capital?: string
+  address?: string
+}) => api.post('/supplier-portal/register', data)
+
+export const getRegistrationStatus = (email: string) =>
+  api.get('/supplier-portal/register/status', { params: { email } })
+
+// US-103: 注册审核
+export const getPendingAuditRegistrations = () =>
+  api.get('/supplier-portal/pending-audit')
+
+export const getRegistration = (id: number) =>
+  api.get(`/supplier-portal/registrations/${id}`)
+
+export const auditRegistration = (id: number, data: {
+  action: 'approve' | 'reject'
+  reason?: string
+  auditor?: string
+}) => api.post(`/supplier-portal/registrations/${id}/audit`, data)
+
+export const resubmitRegistration = (id: number, data: {
+  company_name?: string
+  contact_person?: string
+  phone?: string
+  business_scope?: string
+  registered_capital?: string
+  address?: string
+}) => api.post(`/supplier-portal/registrations/${id}/resubmit`, data)
+
+// US-104~107: 资格评审
+export const createQualificationProject = (data: {
+  name: string
+  description?: string
+  supplier_ids: number[]
+  deadline?: string
+}) => api.post('/qualification/projects', data)
+
+export const getQualificationProjects = (params?: { status?: string }) =>
+  api.get('/qualification/projects', { params })
+
+export const getQualificationProject = (id: number) =>
+  api.get(`/qualification/projects/${id}`)
+
+export const getQuestionnaire = (projectId: number) =>
+  api.get(`/qualification/projects/${projectId}/questionnaire`)
+
+// US-105: 供应商填写问卷
+export const submitQualification = (projectId: number, data: {
+  supplier_id: number
+  responses: Record<string, string>
+  cert_files?: string[]
+}) => api.post(`/qualification/projects/${projectId}/submission`, data)
+
+export const getQualificationSubmissions = (projectId: number) =>
+  api.get(`/qualification/projects/${projectId}/submissions`)
+
+export const getQualificationSubmission = (projectId: number, supplierId: number) =>
+  api.get(`/qualification/projects/${projectId}/submissions/${supplierId}`)
+
+// US-106: 评审
+export const reviewQualification = (projectId: number, supplierId: number, data: {
+  reviewer: string
+  scores: Record<string, number>
+  comments?: string
+  clarification_needed?: boolean
+  clarification_questions?: string[]
+}) => api.post(`/qualification/projects/${projectId}/submissions/${supplierId}/review`, data)
+
+// US-107: 审批
+export const approveQualification = (projectId: number, data: {
+  approved_by: string
+  comment?: string
+}) => api.post(`/qualification/projects/${projectId}/approve`, data)
+
+export const rejectQualification = (projectId: number, data: {
+  rejected_by: string
+  reason: string
+}) => api.post(`/qualification/projects/${projectId}/reject`, data)
+
+export const getQualificationStatus = (projectId: number) =>
+  api.get(`/qualification/projects/${projectId}/status`)
+
+// US-108: 资质过期预警
+export const getSupplierCertifications = (supplierId: number) =>
+  api.get(`/supplier-portal/suppliers/${supplierId}/certifications`)
+
+export const addSupplierCertification = (supplierId: number, data: {
+  cert_name: string
+  cert_number?: string
+  issuing_authority?: string
+  issue_date?: string
+  expiry_date: string
+  cert_file?: string
+}) => api.post(`/supplier-portal/suppliers/${supplierId}/certifications`, data)
+
+export const getSupplierAlerts = () =>
+  api.get('/supplier-portal/supplier-alerts')
+
+export const resolveAlert = (alertId: number, data: {
+  resolution_note?: string
+  new_expiry_date?: string
+  new_cert_file?: string
+}) => api.post(`/supplier-portal/supplier-alerts/${alertId}/resolve`, data)
+
+export const triggerCertExpiryCheck = () =>
+  api.post('/supplier-portal/cert-alerts/check')
+
 // ============ 寻源与合同 API (Phase 2) ============
 
 // 寻源项目
@@ -351,4 +486,94 @@ export const confirmPayment = (id: number) =>
 
 export const getPaymentStats = () =>
   api.get('/financial/payments/stats/summary')
+
+// ============ 预测与订单执行 API (Phase 3) ============
+
+// US-301: 采购预测 (模拟 ERP 同步数据)
+export const getForecasts = (params?: { status?: string; keyword?: string }) =>
+  api.get('/purchase-orders/', { params: { view: 'forecast', ...params } }).catch(() => [])
+
+// US-302: 供应商产能响应
+export const submitCapacityResponse = (forecastId: number, data: {
+  supplier_id: number
+  capacity_quantity: number
+  delivery_commitment: string
+  risk_notes?: string
+}) => api.post(`/purchase-orders/${forecastId}/capacity-response`, data)
+
+// US-303: 采购订单 - 供应商确认/拒绝
+export const confirmOrder = (id: number) =>
+  api.post(`/purchase-orders/${id}/confirm`)
+
+export const rejectOrder = (id: number, reason: string) =>
+  api.post(`/purchase-orders/${id}/reject?reason=${encodeURIComponent(reason)}`)
+
+// US-305: 要货计划 (模拟 ERP 同步)
+export const getDeliveryPlans = (params?: { status?: string }) =>
+  api.get('/purchase-orders/', { params: { view: 'delivery-plan', ...params } }).catch(() => [])
+
+// US-306: 供应商确认要货计划
+export const confirmDeliveryPlan = (planId: number, data: {
+  supplier_id: number
+  confirmed: boolean
+  adjustment_notes?: string
+}) => api.post(`/purchase-orders/${planId}/confirm-delivery`, data)
+
+// US-307: ASN / 送货计划
+export const getASNList = (params?: { status?: string; supplier_id?: number }) =>
+  api.get('/logistics/shipment-notes/', { params: { ...params, view: 'asn' } })
+
+export const createASN = (data: {
+  purchase_order_id: number
+  supplier_id: number
+  carrier_name?: string
+  tracking_no?: string
+  vehicle_no?: string
+  driver_name?: string
+  driver_phone?: string
+  expected_arrival?: string
+  shipping_address?: string
+  total_quantity: number
+  items?: { material_name: string; quantity: number; unit: string }[]
+}) => api.post('/logistics/shipment-notes/', data)
+
+export const updateASN = (id: number, data: Record<string, any>) =>
+  api.put(`/logistics/shipment-notes/${id}`, data)
+
+// US-308: 采购方确认送货计划
+export const approveASN = (id: number) =>
+  api.post(`/logistics/shipment-notes/${id}/approve`)
+
+export const rejectASN = (id: number, reason: string) =>
+  api.post(`/logistics/shipment-notes/${id}/reject?reason=${encodeURIComponent(reason)}`)
+
+// US-309: 装箱单与批次
+export const getPackingLists = (asnId: number) =>
+  api.get(`/logistics/shipment-notes/${asnId}/packing-lists`).catch(() => [])
+
+export const submitPackingList = (asnId: number, data: {
+  items: { material_name: string; quantity: number; batch_no: string; production_date?: string }[]
+}) => api.post(`/logistics/shipment-notes/${asnId}/packing-lists`, data)
+
+// US-310: 收货与验收 (WMS/QMS 同步)
+export const getReceiptAndInspection = (params?: { keyword?: string }) =>
+  api.get('/logistics/receipts/', { params: { ...params, include_inspection: true } })
+
+// US-401~405: 财务结算 (已有上方 API)
+// 补充：供应商端结算单审批拒绝
+export const rejectStatement = (id: number, reason: string) =>
+  api.post(`/financial/statements/${id}/reject?reason=${encodeURIComponent(reason)}`)
+
+export const addStatementComment = (id: number, data: { comment: string; author: string }) =>
+  api.post(`/financial/statements/${id}/comments`, data)
+
+// US-404: 三单匹配与发票审批
+export const threeWayMatch = (invoiceId: number) =>
+  api.get(`/financial/invoices/${invoiceId}/three-way-match`).catch(() => ({ matched: false }))
+
+export const approveInvoice = (id: number) =>
+  api.post(`/financial/invoices/${id}/approve`)
+
+export const rejectInvoice = (id: number, reason: string) =>
+  api.post(`/financial/invoices/${id}/reject?reason=${encodeURIComponent(reason)}`)
 

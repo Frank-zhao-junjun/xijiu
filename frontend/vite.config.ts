@@ -70,6 +70,10 @@ export default defineConfig({
       '/financial': {
         target: 'http://localhost:8000',
         changeOrigin: true
+      },
+      '/qualification': {
+        target: 'http://localhost:8000',
+        changeOrigin: true
       }
     }
   }

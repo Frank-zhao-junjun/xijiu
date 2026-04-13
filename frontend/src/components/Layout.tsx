@@ -5,7 +5,10 @@ import {
   DashboardOutlined, FileTextOutlined, TeamOutlined, ShoppingOutlined,
   InboxOutlined, AppstoreOutlined, AuditOutlined, SwapOutlined,
   TrophyOutlined, ThunderboltOutlined, ContainerOutlined, MessageOutlined,
-  BellOutlined, CarOutlined, DollarOutlined
+  BellOutlined, CarOutlined, DollarOutlined, SafetyCertificateOutlined,
+  ScheduleOutlined, FileProtectOutlined, SendOutlined, BarcodeOutlined,
+  CheckSquareOutlined, AccountBookOutlined, FileSearchOutlined,
+  WalletOutlined, FundProjectionScreenOutlined
 } from '@ant-design/icons'
 
 const { Sider, Content, Header } = AntLayout
@@ -13,16 +16,23 @@ const { Sider, Content, Header } = AntLayout
 // 采购端菜单
 const buyerItems = [
   { key: '/buyer', icon: <DashboardOutlined />, label: '首页概览' },
+  { type: 'group' as const, label: '供应商准入', children: [
+    { key: '/buyer/invitations', icon: <SendOutlined />, label: '注册邀请' },
+    { key: '/buyer/registrations', icon: <TeamOutlined />, label: '注册审核' },
+    { key: '/buyer/qualifications', icon: <SafetyCertificateOutlined />, label: '资格评审' },
+    { key: '/buyer/cert-alerts', icon: <AuditOutlined />, label: '资质预警' },
+  ]},
   { type: 'group' as const, label: '寻源与合同', children: [
     { key: '/buyer/sourcing', icon: <ThunderboltOutlined />, label: '寻源项目' },
     { key: '/buyer/contracts', icon: <TrophyOutlined />, label: '合同管理' },
   ]},
   { type: 'group' as const, label: '采购执行', children: [
+    { key: '/buyer/forecast', icon: <FundProjectionScreenOutlined />, label: '采购预测' },
     { key: '/buyer/orders', icon: <FileTextOutlined />, label: '采购订单' },
-    { key: '/buyer/suppliers', icon: <TeamOutlined />, label: '供应商管理' },
+    { key: '/buyer/delivery-plans', icon: <ScheduleOutlined />, label: '要货计划' },
   ]},
   { type: 'group' as const, label: '仓储物流', children: [
-    { key: '/buyer/waybills', icon: <CarOutlined />, label: '运单管理' },
+    { key: '/buyer/waybills', icon: <CarOutlined />, label: '运单/ASN' },
     { key: '/buyer/receipts', icon: <InboxOutlined />, label: '入库单' },
     { key: '/buyer/inventory', icon: <AppstoreOutlined />, label: '库存查询' },
     { key: '/buyer/inspections', icon: <AuditOutlined />, label: '质检单' },
@@ -38,13 +48,25 @@ const buyerItems = [
 // 供应商端菜单
 const supplierItems = [
   { key: '/supplier', icon: <DashboardOutlined />, label: '首页概览' },
+  { type: 'group' as const, label: '供应商准入', children: [
+    { key: '/supplier/registration', icon: <FileProtectOutlined />, label: '自助注册' },
+    { key: '/supplier/qualifications', icon: <SafetyCertificateOutlined />, label: '资格评审' },
+    { key: '/supplier/certifications', icon: <AuditOutlined />, label: '资质管理' },
+  ]},
   { type: 'group' as const, label: '寻源协同', children: [
     { key: '/supplier/invitations', icon: <MessageOutlined />, label: '收到的邀请' },
     { key: '/supplier/bids', icon: <SwapOutlined />, label: '投标管理' },
   ]},
   { type: 'group' as const, label: '订单执行', children: [
-    { key: '/supplier/orders', icon: <ShoppingOutlined />, label: '销售订单' },
+    { key: '/supplier/order-confirm', icon: <CheckSquareOutlined />, label: '订单确认' },
+    { key: '/supplier/capacity', icon: <FundProjectionScreenOutlined />, label: '产能响应' },
+    { key: '/supplier/delivery-plans', icon: <ScheduleOutlined />, label: '要货计划' },
+    { key: '/supplier/asn', icon: <SendOutlined />, label: '送货计划' },
     { key: '/supplier/contracts', icon: <ContainerOutlined />, label: '合同管理' },
+  ]},
+  { type: 'group' as const, label: '财务结算', children: [
+    { key: '/supplier/settlements', icon: <AccountBookOutlined />, label: '结算单' },
+    { key: '/supplier/invoices', icon: <FileSearchOutlined />, label: '发票管理' },
   ]},
   { type: 'group' as const, label: '信息共享', children: [
     { key: '/supplier/announcements', icon: <BellOutlined />, label: '公告通知' },
@@ -65,7 +87,6 @@ function getMenuItems(portal: string) {
 const Layout: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  // 默认进入采购端
   const pathParts = location.pathname.split('/').filter(Boolean)
   const [portal, setPortal] = useState<'buyer' | 'supplier'>(
     (pathParts[0] === 'buyer' || pathParts[0] === 'supplier') ? pathParts[0] as 'buyer' | 'supplier' : 'buyer'
@@ -82,7 +103,6 @@ const Layout: React.FC = () => {
 
   return (
     <AntLayout style={{ minHeight: '100vh' }}>
-      {/* 顶部栏：Portal 切换 */}
       <Header style={{
         background: '#fff', borderBottom: '1px solid #f0f0f0',
         padding: '0 24px', position: 'fixed', width: '100%', zIndex: 100,
@@ -133,7 +153,6 @@ const Layout: React.FC = () => {
         </div>
       </Header>
 
-      {/* 侧边栏 */}
       <Sider
         width={220}
         style={{
@@ -141,7 +160,7 @@ const Layout: React.FC = () => {
           position: 'fixed',
           height: '100vh',
           left: 0,
-          top: 64,  // below header
+          top: 64,
           overflowY: 'auto'
         }}
       >
@@ -164,7 +183,6 @@ const Layout: React.FC = () => {
         />
       </Sider>
 
-      {/* 内容区 */}
       <AntLayout style={{ marginLeft: 220, marginTop: 64 }}>
         <Content style={{ padding: 20, minHeight: 'calc(100vh - 64px)' }}>
           <Outlet />
