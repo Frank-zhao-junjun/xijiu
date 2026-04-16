@@ -1,0 +1,273 @@
+﻿
+D:\AI\CRM\project_20260416_095304\projects\src\app\calendar\page.tsx
+   6:29  warning  'CardDescription' is defined but never used. Allowed unused vars must match /^_/u      @typescript-eslint/no-unused-vars
+  19:10  warning  'isLoading' is assigned a value but never used. Allowed unused vars must match /^_/u   @typescript-eslint/no-unused-vars
+  22:10  warning  'createDate' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  50:14  warning  'error' is defined but never used. Allowed unused caught errors must match /^_/u       @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\app\contracts\[id]\edit\page.tsx
+  11:3   warning  'Select' is defined but never used. Allowed unused vars must match /^_/u                                          @typescript-eslint/no-unused-vars
+  12:3   warning  'SelectContent' is defined but never used. Allowed unused vars must match /^_/u                                   @typescript-eslint/no-unused-vars
+  13:3   warning  'SelectItem' is defined but never used. Allowed unused vars must match /^_/u                                      @typescript-eslint/no-unused-vars
+  14:3   warning  'SelectTrigger' is defined but never used. Allowed unused vars must match /^_/u                                   @typescript-eslint/no-unused-vars
+  15:3   warning  'SelectValue' is defined but never used. Allowed unused vars must match /^_/u                                     @typescript-eslint/no-unused-vars
+  26:8   warning  'Link' is defined but never used. Allowed unused vars must match /^_/u                                            @typescript-eslint/no-unused-vars
+  27:51  warning  'ContractMilestone' is defined but never used. Allowed unused vars must match /^_/u                               @typescript-eslint/no-unused-vars
+  66:6   warning  React Hook useEffect has a missing dependency: 'fetchContract'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+D:\AI\CRM\project_20260416_095304\projects\src\app\contracts\[id]\page.tsx
+  10:3    warning  'Table' is defined but never used. Allowed unused vars must match /^_/u                                           @typescript-eslint/no-unused-vars
+  11:3    warning  'TableBody' is defined but never used. Allowed unused vars must match /^_/u                                       @typescript-eslint/no-unused-vars
+  12:3    warning  'TableCell' is defined but never used. Allowed unused vars must match /^_/u                                       @typescript-eslint/no-unused-vars
+  13:3    warning  'TableHead' is defined but never used. Allowed unused vars must match /^_/u                                       @typescript-eslint/no-unused-vars
+  14:3    warning  'TableHeader' is defined but never used. Allowed unused vars must match /^_/u                                     @typescript-eslint/no-unused-vars
+  15:3    warning  'TableRow' is defined but never used. Allowed unused vars must match /^_/u                                        @typescript-eslint/no-unused-vars
+  35:21   warning  'FileBarChart' is defined but never used. Allowed unused vars must match /^_/u                                    @typescript-eslint/no-unused-vars
+  35:104  warning  'XCircle' is defined but never used. Allowed unused vars must match /^_/u                                         @typescript-eslint/no-unused-vars
+  56:6    warning  React Hook useEffect has a missing dependency: 'fetchContract'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+D:\AI\CRM\project_20260416_095304\projects\src\app\contracts\new\page.tsx
+  157:51  warning  'q' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\app\data\page.tsx
+  6:10  warning  'Input' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\app\emails\page.tsx
+   4:29  warning  'CardHeader' is defined but never used. Allowed unused vars must match /^_/u                                  @typescript-eslint/no-unused-vars
+   4:41  warning  'CardTitle' is defined but never used. Allowed unused vars must match /^_/u                                   @typescript-eslint/no-unused-vars
+   8:10  warning  'Tabs' is defined but never used. Allowed unused vars must match /^_/u                                        @typescript-eslint/no-unused-vars
+   8:16  warning  'TabsContent' is defined but never used. Allowed unused vars must match /^_/u                                 @typescript-eslint/no-unused-vars
+   8:29  warning  'TabsList' is defined but never used. Allowed unused vars must match /^_/u                                    @typescript-eslint/no-unused-vars
+   8:39  warning  'TabsTrigger' is defined but never used. Allowed unused vars must match /^_/u                                 @typescript-eslint/no-unused-vars
+  44:3   warning  'Filter' is defined but never used. Allowed unused vars must match /^_/u                                      @typescript-eslint/no-unused-vars
+  92:6   warning  React Hook useEffect has a missing dependency: 'fetchLogs'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+D:\AI\CRM\project_20260416_095304\projects\src\app\forecasts\page.tsx
+    4:51  warning  'ChevronDown' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  216:48  warning  'index' is defined but never used. Allowed unused args must match /^_/u        @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\app\invoices\[id]\edit\page.tsx
+  20:24  warning  'InvoiceStatus' is defined but never used. Allowed unused vars must match /^_/u                                  @typescript-eslint/no-unused-vars
+  60:6   warning  React Hook useEffect has a missing dependency: 'fetchInvoice'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+D:\AI\CRM\project_20260416_095304\projects\src\app\invoices\[id]\page.tsx
+  54:40  warning  React Hook useEffect has a missing dependency: 'fetchInvoice'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+D:\AI\CRM\project_20260416_095304\projects\src\app\invoices\new\page.tsx
+  19:22  warning  'OrderItem' is defined but never used. Allowed unused vars must match /^_/u         @typescript-eslint/no-unused-vars
+  34:10  warning  'loading' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\app\invoices\page.tsx
+  9:10  warning  'Label' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\app\leads\kanban\page.tsx
+   3:17  warning  'useCallback' is defined but never used. Allowed unused vars must match /^_/u          @typescript-eslint/no-unused-vars
+  38:3   warning  'Phone' is defined but never used. Allowed unused vars must match /^_/u                @typescript-eslint/no-unused-vars
+  68:11  warning  'attributes' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  68:23  warning  'listeners' is assigned a value but never used. Allowed unused vars must match /^_/u   @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\app\leads\page.tsx
+  40:134  warning  'Download' is defined but never used. Allowed unused vars must match /^_/u         @typescript-eslint/no-unused-vars
+  40:144  warning  'FileSpreadsheet' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  47:16   warning  'handleExport' is defined but never used. Allowed unused vars must match /^_/u     @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\app\opportunities\[id]\page.tsx
+  37:10  warning  'FOLLOW_UP_METHOD_CONFIG' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  37:40  warning  'FollowUpMethod' is defined but never used. Allowed unused vars must match /^_/u           @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\app\opportunities\kanban\page.tsx
+   8:10  warning  'Input' is defined but never used. Allowed unused vars must match /^_/u          @typescript-eslint/no-unused-vars
+  10:3   warning  'Select' is defined but never used. Allowed unused vars must match /^_/u         @typescript-eslint/no-unused-vars
+  11:3   warning  'SelectContent' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  12:3   warning  'SelectItem' is defined but never used. Allowed unused vars must match /^_/u     @typescript-eslint/no-unused-vars
+  13:3   warning  'SelectTrigger' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  14:3   warning  'SelectValue' is defined but never used. Allowed unused vars must match /^_/u    @typescript-eslint/no-unused-vars
+  20:3   warning  'Search' is defined but never used. Allowed unused vars must match /^_/u         @typescript-eslint/no-unused-vars
+  21:3   warning  'Filter' is defined but never used. Allowed unused vars must match /^_/u         @typescript-eslint/no-unused-vars
+  26:10  warning  'cn' is defined but never used. Allowed unused vars must match /^_/u             @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\app\opportunities\page.tsx
+  26:3    warning  'DropdownMenu' is defined but never used. Allowed unused vars must match /^_/u         @typescript-eslint/no-unused-vars
+  27:3    warning  'DropdownMenuContent' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  28:3    warning  'DropdownMenuItem' is defined but never used. Allowed unused vars must match /^_/u     @typescript-eslint/no-unused-vars
+  29:3    warning  'DropdownMenuTrigger' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  31:121  warning  'Download' is defined but never used. Allowed unused vars must match /^_/u             @typescript-eslint/no-unused-vars
+  31:131  warning  'FileSpreadsheet' is defined but never used. Allowed unused vars must match /^_/u      @typescript-eslint/no-unused-vars
+  48:16   warning  'handleExport' is defined but never used. Allowed unused vars must match /^_/u         @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\app\orders\[id]\edit\page.tsx
+   26:39  warning  'Edit' is defined but never used. Allowed unused vars must match /^_/u                                   @typescript-eslint/no-unused-vars
+   26:45  warning  'Building2' is defined but never used. Allowed unused vars must match /^_/u                              @typescript-eslint/no-unused-vars
+   26:56  warning  'Briefcase' is defined but never used. Allowed unused vars must match /^_/u                              @typescript-eslint/no-unused-vars
+   28:48  warning  'OrderItem' is defined but never used. Allowed unused vars must match /^_/u                              @typescript-eslint/no-unused-vars
+  116:6   warning  React Hook useEffect has a missing dependency: 'form'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+D:\AI\CRM\project_20260416_095304\projects\src\app\orders\new\page.tsx
+   25:49  warning  'Building2' is defined but never used. Allowed unused vars must match /^_/u       @typescript-eslint/no-unused-vars
+  233:14  warning  'error' is defined but never used. Allowed unused caught errors must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\app\orders\page.tsx
+    9:10  warning  'Label' is defined but never used. Allowed unused vars must match /^_/u                   @typescript-eslint/no-unused-vars
+   10:10  warning  'Textarea' is defined but never used. Allowed unused vars must match /^_/u                @typescript-eslint/no-unused-vars
+   34:55  warning  'X' is defined but never used. Allowed unused vars must match /^_/u                       @typescript-eslint/no-unused-vars
+   56:10  warning  'showCreate' is assigned a value but never used. Allowed unused vars must match /^_/u     @typescript-eslint/no-unused-vars
+   71:10  warning  'opportunities' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  130:9   warning  'handleCreate' is assigned a value but never used. Allowed unused vars must match /^_/u   @typescript-eslint/no-unused-vars
+  194:9   warning  'updateItem' is assigned a value but never used. Allowed unused vars must match /^_/u     @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\app\page.tsx
+  14:3  warning  'ArrowUpRight' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\app\payments\page.tsx
+  27:3   warning  'Calendar' is defined but never used. Allowed unused vars must match /^_/u               @typescript-eslint/no-unused-vars
+  34:3   warning  'TrendingUp' is defined but never used. Allowed unused vars must match /^_/u             @typescript-eslint/no-unused-vars
+  35:3   warning  'ArrowRight' is defined but never used. Allowed unused vars must match /^_/u             @typescript-eslint/no-unused-vars
+  38:60  warning  'PAYMENT_METHOD_CONFIG' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\app\products\[id]\page.tsx
+  15:9  warning  'router' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\app\products\page.tsx
+  40:33  warning  'DollarSign' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  41:35  warning  'Product' is defined but never used. Allowed unused vars must match /^_/u     @typescript-eslint/no-unused-vars
+  43:10  warning  'format' is defined but never used. Allowed unused vars must match /^_/u      @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\app\reports\conversion\page.tsx
+   7:10  warning  'Tabs' is defined but never used. Allowed unused vars must match /^_/u                      @typescript-eslint/no-unused-vars
+   7:16  warning  'TabsContent' is defined but never used. Allowed unused vars must match /^_/u               @typescript-eslint/no-unused-vars
+   7:29  warning  'TabsList' is defined but never used. Allowed unused vars must match /^_/u                  @typescript-eslint/no-unused-vars
+   7:39  warning  'TabsTrigger' is defined but never used. Allowed unused vars must match /^_/u               @typescript-eslint/no-unused-vars
+  12:10  warning  'formatCurrency' is defined but never used. Allowed unused vars must match /^_/u            @typescript-eslint/no-unused-vars
+  13:10  warning  'OPPORTUNITY_STAGE_CONFIG' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  18:11  warning  'opportunities' is assigned a value but never used. Allowed unused vars must match /^_/u    @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\app\reports\forecast\page.tsx
+   7:10  warning  'Tabs' is defined but never used. Allowed unused vars must match /^_/u                    @typescript-eslint/no-unused-vars
+   7:16  warning  'TabsContent' is defined but never used. Allowed unused vars must match /^_/u             @typescript-eslint/no-unused-vars
+   7:29  warning  'TabsList' is defined but never used. Allowed unused vars must match /^_/u                @typescript-eslint/no-unused-vars
+   7:39  warning  'TabsTrigger' is defined but never used. Allowed unused vars must match /^_/u             @typescript-eslint/no-unused-vars
+  11:77  warning  'PieChart' is defined but never used. Allowed unused vars must match /^_/u                @typescript-eslint/no-unused-vars
+  59:9   warning  'actualRevenue' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\app\reports\funnel\page.tsx
+   4:10  warning  'useCRM' is defined but never used. Allowed unused vars must match /^_/u             @typescript-eslint/no-unused-vars
+  18:10  warning  'viewMode' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\app\reports\team-ranking\page.tsx
+   6:10  warning  'Tabs' is defined but never used. Allowed unused vars must match /^_/u              @typescript-eslint/no-unused-vars
+   6:16  warning  'TabsContent' is defined but never used. Allowed unused vars must match /^_/u       @typescript-eslint/no-unused-vars
+   6:29  warning  'TabsList' is defined but never used. Allowed unused vars must match /^_/u          @typescript-eslint/no-unused-vars
+   6:39  warning  'TabsTrigger' is defined but never used. Allowed unused vars must match /^_/u       @typescript-eslint/no-unused-vars
+  28:24  warning  'loading' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  28:33  warning  'error' is assigned a value but never used. Allowed unused vars must match /^_/u    @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\app\settings\email\page.tsx
+    9:10  warning  'Textarea' is defined but never used. Allowed unused vars must match /^_/u        @typescript-eslint/no-unused-vars
+   19:3   warning  'DialogTrigger' is defined but never used. Allowed unused vars must match /^_/u   @typescript-eslint/no-unused-vars
+   40:3   warning  'User' is defined but never used. Allowed unused vars must match /^_/u            @typescript-eslint/no-unused-vars
+   41:3   warning  'Lock' is defined but never used. Allowed unused vars must match /^_/u            @typescript-eslint/no-unused-vars
+   42:3   warning  'Send' is defined but never used. Allowed unused vars must match /^_/u            @typescript-eslint/no-unused-vars
+  186:14  warning  'error' is defined but never used. Allowed unused caught errors must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\app\settings\roles\page.tsx
+   7:10  warning  'Switch' is defined but never used. Allowed unused vars must match /^_/u    @typescript-eslint/no-unused-vars
+  19:31  warning  'Check' is defined but never used. Allowed unused vars must match /^_/u     @typescript-eslint/no-unused-vars
+  19:38  warning  'X' is defined but never used. Allowed unused vars must match /^_/u         @typescript-eslint/no-unused-vars
+  20:3   warning  'Users' is defined but never used. Allowed unused vars must match /^_/u     @typescript-eslint/no-unused-vars
+  20:10  warning  'Settings' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\app\settings\tags\page.tsx
+  122:14  warning  'err' is defined but never used. Allowed unused caught errors must match /^_/u  @typescript-eslint/no-unused-vars
+  135:14  warning  'err' is defined but never used. Allowed unused caught errors must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\app\settings\templates\page.tsx
+  20:3  warning  'Table' is defined but never used. Allowed unused vars must match /^_/u        @typescript-eslint/no-unused-vars
+  21:3  warning  'TableBody' is defined but never used. Allowed unused vars must match /^_/u    @typescript-eslint/no-unused-vars
+  22:3  warning  'TableCell' is defined but never used. Allowed unused vars must match /^_/u    @typescript-eslint/no-unused-vars
+  23:3  warning  'TableHead' is defined but never used. Allowed unused vars must match /^_/u    @typescript-eslint/no-unused-vars
+  24:3  warning  'TableHeader' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  25:3  warning  'TableRow' is defined but never used. Allowed unused vars must match /^_/u     @typescript-eslint/no-unused-vars
+  35:3  warning  'Mail' is defined but never used. Allowed unused vars must match /^_/u         @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\app\settings\users\page.tsx
+   7:10  warning  'Label' is defined but never used. Allowed unused vars must match /^_/u             @typescript-eslint/no-unused-vars
+  10:10  warning  'ScrollArea' is defined but never used. Allowed unused vars must match /^_/u        @typescript-eslint/no-unused-vars
+  13:30  warning  'DialogTrigger' is defined but never used. Allowed unused vars must match /^_/u     @typescript-eslint/no-unused-vars
+  20:10  warning  'UserPlus' is defined but never used. Allowed unused vars must match /^_/u          @typescript-eslint/no-unused-vars
+  21:11  warning  'ChevronDown' is defined but never used. Allowed unused vars must match /^_/u       @typescript-eslint/no-unused-vars
+  21:24  warning  'ChevronRight' is defined but never used. Allowed unused vars must match /^_/u      @typescript-eslint/no-unused-vars
+  23:10  warning  'defaultRoles' is defined but never used. Allowed unused vars must match /^_/u      @typescript-eslint/no-unused-vars
+  23:24  warning  'getCategoryLabel' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\app\tasks\[id]\page.tsx
+  19:3  warning  'Edit' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\app\tasks\page.tsx
+  40:46  warning  'Clock' is defined but never used. Allowed unused vars must match /^_/u               @typescript-eslint/no-unused-vars
+  41:10  warning  'TASK_STATUS_CONFIG' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\app\workflows\page.tsx
+  9:28  warning  'Clock' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\components\crm\activity-timeline.tsx
+   17:34   warning  'PaginationEllipsis' is defined but never used. Allowed unused vars must match /^_/u     @typescript-eslint/no-unused-vars
+   20:116  warning  'CreditCard' is defined but never used. Allowed unused vars must match /^_/u             @typescript-eslint/no-unused-vars
+  258:25   warning  'ActivityIcon' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\components\crm\global-search.tsx
+  250:39  warning  'index' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\components\crm\kanban-board.tsx
+  90:27  warning  'event' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\components\crm\kanban-card.tsx
+  42:24  warning  'e' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\components\crm\mobile-header.tsx
+  7:10  warning  'GlobalSearch' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\components\crm\mobile-table.tsx
+  5:29  warning  'CardHeader' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\components\crm\permission-guard.tsx
+  79:6  warning  React Hook useEffect has a missing dependency: 'checkPermissions'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+D:\AI\CRM\project_20260416_095304\projects\src\components\crm\sidebar.tsx
+  23:3  warning  'Receipt' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\components\crm\tag-selector.tsx
+  14:3  warning  'customerId' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\components\email\send-email-dialog.tsx
+  73:6  warning  React Hook useEffect has a missing dependency: 'fetchTemplates'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+D:\AI\CRM\project_20260416_095304\projects\src\components\reports\conversion-chart.tsx
+  14:3  warning  'Legend' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\components\reports\forecast-chart.tsx
+    6:3   warning  'LineChart' is defined but never used. Allowed unused vars must match /^_/u              @typescript-eslint/no-unused-vars
+  155:10  warning  'forecastData' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\components\reports\funnel-chart.tsx
+  17:7  warning  'FUNNEL_STAGES' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\hooks\use-report-data.ts
+   29:3   warning  'compareWith' is defined but never used. Allowed unused args must match /^_/u                                    @typescript-eslint/no-unused-vars
+   31:19  warning  'setLoading' is assigned a value but never used. Allowed unused vars must match /^_/u                            @typescript-eslint/no-unused-vars
+   32:17  warning  'setError' is assigned a value but never used. Allowed unused vars must match /^_/u                              @typescript-eslint/no-unused-vars
+   48:13  warning  'exitedCount' is assigned a value but never used. Allowed unused vars must match /^_/u                           @typescript-eslint/no-unused-vars
+   67:6   warning  React Hook useMemo has an unnecessary dependency: 'timeRange'. Either exclude it or remove the dependency array  react-hooks/exhaustive-deps
+   92:19  warning  'setLoading' is assigned a value but never used. Allowed unused vars must match /^_/u                            @typescript-eslint/no-unused-vars
+   93:17  warning  'setError' is assigned a value but never used. Allowed unused vars must match /^_/u                              @typescript-eslint/no-unused-vars
+  106:6   warning  React Hook useMemo has an unnecessary dependency: 'timeRange'. Either exclude it or remove the dependency array  react-hooks/exhaustive-deps
+
+D:\AI\CRM\project_20260416_095304\projects\src\lib\crm-context.tsx
+  457:9  warning  'todayTasks' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\AI\CRM\project_20260416_095304\projects\src\lib\crm-database.ts
+  1954:38  warning  'timeRange' is assigned a value but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+  1977:37  warning  'timeRange' is assigned a value but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+  1996:42  warning  'timeRange' is assigned a value but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+鉁?168 problems (0 errors, 168 warnings)
+

@@ -1,0 +1,113 @@
+{
+  "branchName": "feature/analytics-reports",
+  "version": "4.0",
+  "title": "高级数据分析报表",
+  "description": "新增销售数据分析报表模块，包含销售漏斗分析、收入预测、团队业绩排名、阶段转化率分析等功能",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "销售漏斗分析报表",
+      "description": "可视化展示从线索到成交各阶段的数量和金额转化情况",
+      "acceptanceCriteria": [
+        "展示各阶段（线索、机会、提案、谈判、成交）的数量分布",
+        "展示各阶段的金额分布",
+        "显示各阶段到下一阶段的转化率",
+        "支持按时间范围筛选（本月/本季度/本年/自定义）",
+        "类型检查通过",
+        "功能测试通过"
+      ],
+      "priority": 1,
+      "passes": true,
+      "estimatedFiles": ["src/app/reports/funnel/page.tsx", "src/components/reports/funnel-chart.tsx"]
+    },
+    {
+      "id": "US-002",
+      "title": "团队业绩排行榜",
+      "description": "展示销售团队成员的销售业绩排名，激励良性竞争",
+      "acceptanceCriteria": [
+        "展示团队成员列表及关键指标（成交额、新商机数、转化率）",
+        "按成交额/新商机数/转化率排序",
+        "显示环比增长率",
+        "支持选择时间范围",
+        "类型检查通过",
+        "功能测试通过"
+      ],
+      "priority": 2,
+      "passes": true,
+      "estimatedFiles": ["src/app/reports/team-ranking/page.tsx", "src/components/reports/team-ranking.tsx"]
+    },
+    {
+      "id": "US-003",
+      "title": "收入预测报表",
+      "description": "基于历史数据和当前管道，预测未来收入",
+      "acceptanceCriteria": [
+        "展示乐观/保守/预期三种预测",
+        "基于商阶段概率加权计算",
+        "按月/季度展示预测趋势",
+        "与实际收入对比（已完成部分）",
+        "类型检查通过",
+        "功能测试通过"
+      ],
+      "priority": 3,
+      "passes": true,
+      "estimatedFiles": ["src/app/reports/forecast/page.tsx", "src/components/reports/forecast-chart.tsx"]
+    },
+    {
+      "id": "US-004",
+      "title": "阶段转化率分析",
+      "description": "分析各阶段的转化效率，找出瓶颈",
+      "acceptanceCriteria": [
+        "展示各阶段的转化率柱状图",
+        "显示平均停留时间",
+        "标识转化率下降的阶段（红色预警）",
+        "支持时间范围对比（上期vs本期）",
+        "类型检查通过",
+        "功能测试通过"
+      ],
+      "priority": 4,
+      "passes": true,
+      "estimatedFiles": ["src/app/reports/conversion/page.tsx", "src/components/reports/conversion-chart.tsx"]
+    },
+    {
+      "id": "US-005",
+      "title": "报表导航入口",
+      "description": "在侧边栏添加报表模块入口，整理报表页面结构",
+      "acceptanceCriteria": [
+        "侧边栏添加「报表中心」菜单项",
+        "包含子菜单：销售漏斗、团队排名、收入预测、转化分析",
+        "报表页面使用统一布局",
+        "类型检查通过",
+        "功能测试通过"
+      ],
+      "priority": 5,
+      "passes": true,
+      "estimatedFiles": ["src/components/crm/sidebar.tsx", "src/app/reports/layout.tsx"]
+    },
+    {
+      "id": "US-006",
+      "title": "数据导出功能",
+      "description": "支持将报表数据导出为CSV格式",
+      "acceptanceCriteria": [
+        "各报表页面添加「导出CSV」按钮",
+        "导出文件名包含报表类型和日期",
+        "导出数据包含筛选条件",
+        "类型检查通过",
+        "功能测试通过"
+      ],
+      "priority": 6,
+      "passes": true,
+      "estimatedFiles": ["src/components/reports/export-utils.ts"]
+    }
+  ],
+  "qualityGate": {
+    "typecheck": "pnpm typecheck",
+    "test": "pnpm test || true",
+    "build": "pnpm build"
+  },
+  "completedFeatures": [
+    "V3.0: 逾期提醒、快捷跟进、数据导出、合同管理",
+    "V3.1: 仪表盘销售数据分析增强",
+    "V3.2: 产品管理模块",
+    "V4.0: 高级数据分析报表（销售漏斗、团队排名、收入预测、转化分析）"
+  ]
+}

@@ -1,0 +1,61 @@
+# Ralph 方法进度追踪
+# 格式：日期 | 任务ID | 状态 | 关键决策/踩坑
+
+## 2026-04-15
+
+### US-001 销售漏斗分析报表
+- 状态: ✅ 已完成
+- 创建文件: 
+  - src/components/reports/funnel-chart.tsx
+  - src/app/reports/funnel/page.tsx
+- 决策: 使用 recharts 库进行图表渲染
+- 功能: 展示各阶段数量和金额分布，支持时间范围筛选
+
+### US-002 团队业绩排行榜
+- 状态: ✅ 已完成
+- 创建文件:
+  - src/components/reports/team-ranking.tsx
+  - src/app/reports/team-ranking/page.tsx
+- 功能: 展示团队成员业绩排名，支持多种排序方式
+
+### US-003 收入预测报表
+- 状态: ✅ 已完成
+- 创建文件:
+  - src/components/reports/forecast-chart.tsx
+  - src/app/reports/forecast/page.tsx
+- 功能: 乐观/保守/预期三种预测，支持多周期
+
+### US-004 阶段转化率分析
+- 状态: ✅ 已完成
+- 创建文件:
+  - src/components/reports/conversion-chart.tsx
+  - src/app/reports/conversion/page.tsx
+- 功能: 分析各阶段转化效率，标识瓶颈阶段
+
+### US-005 报表导航入口
+- 状态: ✅ 已完成
+- 修改文件:
+  - src/components/crm/sidebar.tsx
+- 创建文件:
+  - src/app/reports/page.tsx (报表首页)
+  - src/app/reports/layout.tsx
+- 功能: 侧边栏添加报表中心菜单，含4个子菜单
+
+### US-006 数据导出功能
+- 状态: ✅ 已完成
+- 功能: 各报表页面添加CSV导出按钮
+- 实现: 在各报表页面的handleExport函数中实现
+
+### 整体进度
+- [x] US-001 销售漏斗分析报表 - ✅ 已完成
+- [x] US-002 团队业绩排行榜 - ✅ 已完成
+- [x] US-003 收入预测报表 - ✅ 已完成
+- [x] US-004 阶段转化率分析 - ✅ 已完成
+- [x] US-005 报表导航入口 - ✅ 已完成
+- [x] US-006 数据导出功能 - ✅ 已完成
+
+## 待办
+- [ ] Git提交和推送
+- [ ] 部署到 vfdm2xmfj2.coze.site
+- [ ] 更新 README.md
+- [ ] 飞书通知主人
